@@ -1,0 +1,531 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="A sample team-level Jira sprint progress dashboard for CPS.">
+  <title>CPS Sprint Pulse | Jira Dashboard Demo</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --ink: #172b4d;
+      --muted: #68778d;
+      --line: #e8edf3;
+      --canvas: #f5f7fb;
+      --panel: #fff;
+      --blue: #3158d8;
+      --blue-soft: #edf1ff;
+      --teal: #168c79;
+      --teal-soft: #e7f6f2;
+      --amber: #c47b11;
+      --amber-soft: #fff4de;
+      --red: #c34e56;
+      --red-soft: #fff0f0;
+      --shadow: 0 3px 12px rgba(23, 43, 77, .045);
+      font-family: Inter, "Segoe UI", Arial, sans-serif;
+      font-synthesis: none;
+      text-rendering: optimizeLegibility;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-width: 320px;
+      background: var(--canvas);
+      color: var(--ink);
+      font-size: 14px;
+    }
+
+    button, select { font: inherit; }
+
+    .topbar {
+      height: 64px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 max(28px, calc((100vw - 1320px) / 2));
+      background: #fff;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .brand, .topbar-right, .heading, .heading-meta, .section-heading,
+    .section-title, .metric-label, .scope-counts, .table-heading, .footer {
+      display: flex;
+      align-items: center;
+    }
+
+    .brand { gap: 11px; font-weight: 700; letter-spacing: -.2px; }
+    .brand-mark {
+      width: 30px;
+      height: 30px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      background: #3158d8;
+      color: #fff;
+      font-size: 15px;
+      font-weight: 800;
+    }
+
+    .topbar-right { gap: 10px; color: var(--muted); font-size: 12px; }
+    .demo-pill, .status-pill, .change-pill {
+      display: inline-flex;
+      align-items: center;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+      white-space: nowrap;
+    }
+    .demo-pill { padding: 7px 10px; color: #8a5b0b; background: var(--amber-soft); letter-spacing: .45px; }
+
+    main {
+      width: min(1320px, calc(100% - 56px));
+      margin: 34px auto 38px;
+    }
+
+    .heading { justify-content: space-between; align-items: flex-end; gap: 22px; margin-bottom: 24px; }
+    .eyebrow {
+      margin: 0 0 7px;
+      color: var(--blue);
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 1.1px;
+      text-transform: uppercase;
+    }
+    h1 { margin: 0; font-size: clamp(25px, 3vw, 32px); letter-spacing: -1px; line-height: 1.15; }
+    .subtitle { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+    .heading-meta { gap: 10px; color: var(--muted); font-size: 12px; }
+    .meta-dot { width: 4px; height: 4px; border-radius: 50%; background: #aab4c3; }
+
+    .sprint-control { display: flex; flex-direction: column; gap: 6px; min-width: 230px; }
+    .sprint-control label { color: var(--muted); font-size: 11px; font-weight: 700; }
+    select {
+      min-height: 42px;
+      padding: 0 38px 0 12px;
+      border: 1px solid #d8e0eb;
+      border-radius: 8px;
+      background: #fff;
+      color: var(--ink);
+      font-weight: 650;
+      outline: none;
+    }
+    select:focus-visible, a:focus-visible { outline: 3px solid #8fa6ff; outline-offset: 2px; }
+
+    .metric-grid { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 16px; margin-bottom: 16px; }
+    .card {
+      border: 1px solid var(--line);
+      border-radius: 11px;
+      background: var(--panel);
+      box-shadow: var(--shadow);
+    }
+    .metric-card { min-height: 151px; padding: 19px 20px 17px; }
+    .metric-label { justify-content: space-between; gap: 10px; color: var(--muted); font-size: 12px; font-weight: 650; }
+    .metric-icon {
+      width: 28px;
+      height: 28px;
+      display: grid;
+      place-items: center;
+      border-radius: 8px;
+      color: var(--blue);
+      background: var(--blue-soft);
+      font-size: 14px;
+      font-weight: 750;
+    }
+    .metric-icon.teal { color: var(--teal); background: var(--teal-soft); }
+    .metric-icon.amber { color: var(--amber); background: var(--amber-soft); }
+    .metric-icon.red { color: var(--red); background: var(--red-soft); }
+    .metric-value-row { display: flex; align-items: baseline; gap: 7px; margin-top: 12px; }
+    .metric-value { font-size: 27px; font-weight: 750; letter-spacing: -.9px; line-height: 1; }
+    .metric-unit { color: var(--muted); font-size: 12px; }
+    .metric-note { margin-top: 9px; color: var(--muted); font-size: 11px; }
+    .progress-track { height: 5px; overflow: hidden; margin-top: 14px; border-radius: 6px; background: #edf0f5; }
+    .progress-fill { height: 100%; border-radius: inherit; background: var(--blue); transition: width .25s ease; }
+    .progress-fill.teal { background: var(--teal); }
+    .scope-counts { gap: 12px; margin-top: 15px; }
+    .scope-counts span { display: flex; align-items: center; gap: 5px; font-size: 12px; font-weight: 700; }
+    .added { color: var(--teal); }
+    .removed { color: var(--red); }
+
+    .primary-grid { display: grid; grid-template-columns: minmax(0, 1.75fr) minmax(265px, .85fr); gap: 16px; margin-bottom: 16px; }
+    .panel { padding: 21px 22px; }
+    .section-heading { justify-content: space-between; gap: 12px; margin-bottom: 5px; }
+    .section-title { gap: 9px; margin: 0; font-size: 15px; font-weight: 730; letter-spacing: -.2px; }
+    .section-subtitle { margin: 5px 0 0; color: var(--muted); font-size: 11px; }
+    .chart-key { display: flex; gap: 15px; align-items: center; color: var(--muted); font-size: 11px; }
+    .key-item { display: inline-flex; align-items: center; gap: 6px; }
+    .key-line { width: 17px; height: 2px; border-radius: 3px; background: var(--blue); }
+    .key-line.ideal { background: #9da9bb; border-top: 1px dashed #9da9bb; height: 0; }
+    .chart-wrap { width: 100%; margin-top: 17px; }
+    #burndown { display: block; width: 100%; height: auto; overflow: visible; }
+    .chart-caption { margin: 7px 0 0; color: var(--muted); font-size: 10px; }
+    .chart-tooltip { fill: var(--ink); font-size: 10px; }
+
+    .side-stat { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; border-bottom: 1px solid var(--line); }
+    .side-stat:last-child { border-bottom: 0; }
+    .side-stat-label { color: var(--muted); font-size: 12px; }
+    .side-stat-value { font-size: 13px; font-weight: 750; }
+    .side-stat-value.good { color: var(--teal); }
+    .side-stat-value.warn { color: var(--amber); }
+    .side-stat-value.bad { color: var(--red); }
+    .health-note { display: flex; gap: 9px; margin-top: 14px; padding: 11px; border-radius: 8px; background: #f3f6ff; color: #465a93; font-size: 11px; line-height: 1.5; }
+    .health-note strong { color: var(--ink); }
+
+    .tables-grid { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 16px; }
+    .table-heading { justify-content: space-between; gap: 10px; margin-bottom: 15px; }
+    .table-heading h2 { margin: 0; font-size: 14px; font-weight: 730; }
+    .table-count { color: var(--muted); font-size: 11px; }
+    .table-scroll { overflow-x: auto; }
+    table { width: 100%; border-collapse: collapse; text-align: left; }
+    th { padding: 0 9px 10px; color: #8190a5; font-size: 10px; font-weight: 700; letter-spacing: .45px; text-transform: uppercase; }
+    td { padding: 11px 9px; border-top: 1px solid #eef1f5; color: #354661; font-size: 11px; vertical-align: middle; }
+    td:first-child, th:first-child { padding-left: 0; }
+    .issue-key { color: var(--blue); font-weight: 750; white-space: nowrap; }
+    .issue-summary { min-width: 115px; font-weight: 600; }
+    .owner-cell, .age-cell { color: var(--muted); white-space: nowrap; }
+    .status-pill { padding: 5px 7px; color: #a43d45; background: var(--red-soft); }
+    .change-pill { padding: 5px 7px; }
+    .change-pill.add { color: #147460; background: var(--teal-soft); }
+    .change-pill.remove { color: #a43d45; background: var(--red-soft); }
+    .change-points { font-weight: 750; white-space: nowrap; }
+    .empty-state { padding: 25px 10px; color: var(--muted); text-align: center; }
+    .footer { justify-content: space-between; gap: 12px; margin-top: 18px; color: #8491a4; font-size: 10px; }
+    .footer a { color: #61728f; text-decoration: underline; text-underline-offset: 2px; }
+
+    @media (max-width: 920px) {
+      .metric-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .primary-grid { grid-template-columns: minmax(0, 1.4fr) minmax(245px, .9fr); }
+      main { width: min(100% - 36px, 1320px); }
+      .topbar { padding: 0 18px; }
+    }
+    @media (max-width: 680px) {
+      main { margin-top: 24px; }
+      .heading { align-items: stretch; flex-direction: column; }
+      .heading-meta { margin-top: 12px; }
+      .sprint-control { width: 100%; }
+      .primary-grid, .tables-grid { grid-template-columns: 1fr; }
+      .panel { padding: 18px 16px; }
+      .chart-key { gap: 9px; }
+      .footer { align-items: flex-start; flex-direction: column; }
+    }
+    @media (max-width: 430px) {
+      .metric-grid { gap: 10px; }
+      .metric-card { min-height: 145px; padding: 15px 13px; }
+      .metric-value { font-size: 24px; }
+      .metric-note { line-height: 1.4; }
+      .topbar-right > span:last-child { display: none; }
+      .chart-key { font-size: 10px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { scroll-behavior: auto !important; transition-duration: .01ms !important; }
+    }
+  </style>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark" aria-hidden="true">J</span><span>Jira Team Insights</span></div>
+    <div class="topbar-right"><span class="demo-pill">SAMPLE DATA</span><span>Preview dashboard</span></div>
+  </header>
+
+  <main>
+    <section class="heading" aria-labelledby="page-title">
+      <div>
+        <p class="eyebrow">Team sprint dashboard</p>
+        <h1 id="page-title">CPS Sprint Pulse</h1>
+        <p class="subtitle">Team-level progress, delivery pace, and sprint risks in one view.</p>
+        <div class="heading-meta" aria-label="Sprint duration and dashboard type">
+          <span>Two-week sprints</span><span class="meta-dot" aria-hidden="true"></span>
+          <span>Demo mode</span>
+        </div>
+      </div>
+      <div class="sprint-control">
+        <label for="sprint-select">Sprint</label>
+        <select id="sprint-select" aria-label="Select a sprint"></select>
+      </div>
+    </section>
+
+    <section class="metric-grid" aria-label="Sprint summary metrics">
+      <article class="card metric-card">
+        <div class="metric-label"><span>Story points completed</span><span class="metric-icon" aria-hidden="true">↗</span></div>
+        <div class="metric-value-row"><span class="metric-value" id="points-value">—</span><span class="metric-unit" id="points-unit">points</span></div>
+        <div class="metric-note" id="points-note"></div>
+        <div class="progress-track" role="progressbar" id="points-progress" aria-label="Story points completed" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-fill" id="points-fill"></div>
+        </div>
+      </article>
+      <article class="card metric-card">
+        <div class="metric-label"><span>Issues completed</span><span class="metric-icon teal" aria-hidden="true">✓</span></div>
+        <div class="metric-value-row"><span class="metric-value" id="issues-value">—</span><span class="metric-unit">issues</span></div>
+        <div class="metric-note" id="issues-note"></div>
+        <div class="progress-track" role="progressbar" id="issues-progress" aria-label="Issues completed" aria-valuemin="0" aria-valuemax="100">
+          <div class="progress-fill teal" id="issues-fill"></div>
+        </div>
+      </article>
+      <article class="card metric-card">
+        <div class="metric-label"><span>Blocked issues</span><span class="metric-icon red" aria-hidden="true">!</span></div>
+        <div class="metric-value-row"><span class="metric-value" id="blocked-value">—</span><span class="metric-unit">currently blocked</span></div>
+        <div class="metric-note" id="blocked-note"></div>
+      </article>
+      <article class="card metric-card">
+        <div class="metric-label"><span>Scope change</span><span class="metric-icon amber" aria-hidden="true">↔</span></div>
+        <div class="scope-counts">
+          <span class="added" id="added-value">+0</span>
+          <span class="removed" id="removed-value">−0</span>
+        </div>
+        <div class="metric-note" id="scope-note">Story points added / removed after sprint start</div>
+      </article>
+    </section>
+
+    <section class="primary-grid" aria-label="Sprint burndown and health">
+      <article class="card panel">
+        <div class="section-heading">
+          <div>
+            <h2 class="section-title">Sprint burndown</h2>
+            <p class="section-subtitle" id="chart-subtitle">Remaining story points over the two-week sprint</p>
+          </div>
+          <div class="chart-key" aria-label="Chart legend">
+            <span class="key-item"><span class="key-line" aria-hidden="true"></span>Actual</span>
+            <span class="key-item"><span class="key-line ideal" aria-hidden="true"></span>Ideal</span>
+          </div>
+        </div>
+        <div class="chart-wrap">
+          <svg id="burndown" viewBox="0 0 720 250" role="img" aria-labelledby="chart-title chart-desc"></svg>
+        </div>
+        <p class="chart-caption">Sample trajectory for illustration. Day 0 is sprint start; completed sprints show their full history.</p>
+      </article>
+      <article class="card panel">
+        <div class="section-heading">
+          <div>
+            <h2 class="section-title">Sprint health</h2>
+            <p class="section-subtitle">Plan changes and delivery status</p>
+          </div>
+        </div>
+        <div style="margin-top: 16px">
+          <div class="side-stat"><span class="side-stat-label">Planned work</span><span class="side-stat-value" id="planned-value">—</span></div>
+          <div class="side-stat"><span class="side-stat-label">Remaining work</span><span class="side-stat-value" id="remaining-value">—</span></div>
+          <div class="side-stat"><span class="side-stat-label">Net scope change</span><span class="side-stat-value" id="net-scope-value">—</span></div>
+          <div class="side-stat"><span class="side-stat-label">Sprint elapsed</span><span class="side-stat-value" id="elapsed-value">—</span></div>
+        </div>
+        <div class="health-note" id="health-note" role="status"></div>
+      </article>
+    </section>
+
+    <section class="tables-grid" aria-label="Sprint detail tables">
+      <article class="card panel">
+        <div class="table-heading">
+          <h2>Blocked issues</h2>
+          <span class="table-count" id="blocker-count"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Issue</th><th scope="col">Summary</th><th scope="col">Owner</th><th scope="col">Age</th></tr></thead>
+            <tbody id="blockers-table"></tbody>
+          </table>
+        </div>
+      </article>
+      <article class="card panel">
+        <div class="table-heading">
+          <h2>Scope changes</h2>
+          <span class="table-count" id="change-count"></span>
+        </div>
+        <div class="table-scroll">
+          <table>
+            <thead><tr><th scope="col">Issue</th><th scope="col">Summary</th><th scope="col">Change</th><th scope="col">Points</th></tr></thead>
+            <tbody id="changes-table"></tbody>
+          </table>
+        </div>
+      </article>
+    </section>
+
+    <footer class="footer">
+      <span>Illustrative demo only — metrics are fictional and are not connected to Jira.</span>
+      <span>Designed for a team-level view; no assignee filters.</span>
+    </footer>
+  </main>
+
+  <script>
+    const sprints = [
+      {
+        name: "CPS Sprint 24", start: "2026-10-12", end: "2026-10-25", elapsed: 4, planned: 120, done: 37,
+        issueTotal: 42, issuesDone: 13, added: 18, removed: 6,
+        remaining: [120, 111, 104, 94, 83],
+        blockers: [
+          { key: "CPS-418", summary: "Partner API credentials", owner: "N. Patel", age: "3 days" },
+          { key: "CPS-426", summary: "Review event schema", owner: "A. Chen", age: "2 days" },
+          { key: "CPS-431", summary: "Staging data refresh", owner: "M. Jones", age: "1 day" }
+        ],
+        changes: [
+          { key: "CPS-439", summary: "Add retry handling", kind: "Added", points: 8 },
+          { key: "CPS-441", summary: "Audit export edge case", kind: "Added", points: 5 },
+          { key: "CPS-444", summary: "Dashboard empty state", kind: "Added", points: 5 },
+          { key: "CPS-402", summary: "Move alert polish out", kind: "Removed", points: 6 }
+        ]
+      },
+      {
+        name: "CPS Sprint 23", start: "2026-09-28", end: "2026-10-11", elapsed: 14, planned: 112, done: 106,
+        issueTotal: 40, issuesDone: 36, added: 12, removed: 4,
+        remaining: [112, 104, 99, 90, 80, 74, 64, 58, 49, 43, 34, 25, 18, 11, 6],
+        blockers: [{ key: "CPS-390", summary: "Mobile regression check", owner: "L. Kim", age: "2 days" }],
+        changes: [
+          { key: "CPS-407", summary: "Add audit metadata", kind: "Added", points: 8 },
+          { key: "CPS-411", summary: "Update retry tests", kind: "Added", points: 4 },
+          { key: "CPS-378", summary: "Defer legacy cleanup", kind: "Removed", points: 4 }
+        ]
+      },
+      {
+        name: "CPS Sprint 22", start: "2026-09-14", end: "2026-09-27", elapsed: 14, planned: 105, done: 103,
+        issueTotal: 41, issuesDone: 39, added: 8, removed: 10,
+        remaining: [105, 98, 90, 82, 78, 71, 64, 56, 49, 42, 35, 27, 19, 10, 2],
+        blockers: [
+          { key: "CPS-362", summary: "Vendor test environment", owner: "S. Rao", age: "4 days" },
+          { key: "CPS-369", summary: "Confirm retention rules", owner: "A. Chen", age: "1 day" }
+        ],
+        changes: [
+          { key: "CPS-381", summary: "Add status endpoint", kind: "Added", points: 8 },
+          { key: "CPS-350", summary: "Defer log migration", kind: "Removed", points: 6 },
+          { key: "CPS-357", summary: "Move report styling out", kind: "Removed", points: 4 }
+        ]
+      },
+      {
+        name: "CPS Sprint 21", start: "2026-08-31", end: "2026-09-13", elapsed: 14, planned: 118, done: 110,
+        issueTotal: 43, issuesDone: 37, added: 20, removed: 8,
+        remaining: [118, 110, 106, 97, 88, 82, 74, 66, 57, 51, 43, 35, 26, 16, 8],
+        blockers: [{ key: "CPS-332", summary: "Security review sign-off", owner: "N. Patel", age: "3 days" }],
+        changes: [
+          { key: "CPS-345", summary: "Add webhook retries", kind: "Added", points: 13 },
+          { key: "CPS-348", summary: "Add import validation", kind: "Added", points: 7 },
+          { key: "CPS-318", summary: "Defer admin guide", kind: "Removed", points: 8 }
+        ]
+      },
+      {
+        name: "CPS Sprint 20", start: "2026-08-17", end: "2026-08-30", elapsed: 14, planned: 98, done: 96,
+        issueTotal: 36, issuesDone: 33, added: 6, removed: 2,
+        remaining: [98, 91, 84, 77, 70, 63, 56, 49, 42, 35, 28, 21, 14, 8, 2],
+        blockers: [],
+        changes: [{ key: "CPS-301", summary: "Add export metrics", kind: "Added", points: 6 }]
+      },
+      {
+        name: "CPS Sprint 19", start: "2026-08-03", end: "2026-08-16", elapsed: 14, planned: 110, done: 106,
+        issueTotal: 42, issuesDone: 38, added: 14, removed: 5,
+        remaining: [110, 102, 95, 88, 81, 74, 67, 60, 53, 46, 39, 31, 22, 13, 4],
+        blockers: [
+          { key: "CPS-274", summary: "Confirm API quota", owner: "M. Jones", age: "2 days" },
+          { key: "CPS-282", summary: "Resolve test fixture", owner: "S. Rao", age: "1 day" }
+        ],
+        changes: [
+          { key: "CPS-290", summary: "Add bulk update", kind: "Added", points: 8 },
+          { key: "CPS-294", summary: "Add pagination tests", kind: "Added", points: 6 },
+          { key: "CPS-263", summary: "Defer tooltip polish", kind: "Removed", points: 5 }
+        ]
+      }
+    ];
+
+    const select = document.querySelector("#sprint-select");
+    const formatDate = (value) => new Intl.DateTimeFormat("en", { month: "short", day: "numeric" })
+      .format(new Date(`${value}T12:00:00`));
+
+    sprints.forEach((sprint, index) => {
+      const option = document.createElement("option");
+      option.value = String(index);
+      option.textContent = `${sprint.name} · ${formatDate(sprint.start)} – ${formatDate(sprint.end)}`;
+      select.append(option);
+    });
+
+    function renderChart(sprint) {
+      const svg = document.querySelector("#burndown");
+      const width = 720;
+      const height = 250;
+      const pad = { top: 17, right: 15, bottom: 35, left: 39 };
+      const plotWidth = width - pad.left - pad.right;
+      const plotHeight = height - pad.top - pad.bottom;
+      const max = Math.ceil(sprint.planned / 20) * 20;
+      const x = (day) => pad.left + (day / 14) * plotWidth;
+      const y = (points) => pad.top + (1 - points / max) * plotHeight;
+      const horizontalTicks = [0, .25, .5, .75, 1].map((part) => {
+        const value = Math.round(max * part);
+        return `<line x1="${pad.left}" y1="${y(value)}" x2="${width - pad.right}" y2="${y(value)}" stroke="#edf0f5" />
+          <text x="${pad.left - 9}" y="${y(value) + 3}" text-anchor="end" fill="#8290a4" font-size="10">${value}</text>`;
+      }).join("");
+      const verticalTicks = [0, 2, 4, 6, 8, 10, 12, 14].map((day) =>
+        `<text x="${x(day)}" y="${height - 12}" text-anchor="middle" fill="#8290a4" font-size="10">${day}</text>`
+      ).join("");
+      const ideal = Array.from({ length: 15 }, (_, day) =>
+        `${day === 0 ? "M" : "L"} ${x(day)} ${y(sprint.planned * (1 - day / 14))}`
+      ).join(" ");
+      const actual = sprint.remaining.map((points, day) =>
+        `${day === 0 ? "M" : "L"} ${x(day)} ${y(points)}`
+      ).join(" ");
+      const actualDots = sprint.remaining.map((points, day) =>
+        `<circle cx="${x(day)}" cy="${y(points)}" r="${day === sprint.remaining.length - 1 ? 4 : 2.5}" fill="#3158d8" />`
+      ).join("");
+      svg.innerHTML = `<title id="chart-title">${sprint.name} burndown chart</title>
+        <desc id="chart-desc">Story points remaining from day zero through day fourteen. The actual sample line has ${sprint.remaining.length} recorded days. The dashed ideal line reaches zero on day fourteen.</desc>
+        ${horizontalTicks}
+        ${verticalTicks}
+        <path d="${ideal}" fill="none" stroke="#9da9bb" stroke-width="2" stroke-dasharray="5 5" />
+        <path d="${actual}" fill="none" stroke="#3158d8" stroke-width="3" stroke-linecap="round" stroke-linejoin="round" />
+        ${actualDots}
+        <text x="${width - pad.right}" y="${height - 1}" text-anchor="end" fill="#8290a4" font-size="9">Sprint day</text>`;
+    }
+
+    function renderTableRows(target, rows, renderRow, emptyText, colspan) {
+      const body = document.querySelector(target);
+      if (!rows.length) {
+        body.innerHTML = `<tr><td class="empty-state" colspan="${colspan}">${emptyText}</td></tr>`;
+        return;
+      }
+      body.innerHTML = rows.map(renderRow).join("");
+    }
+
+    function renderSprint(sprint) {
+      const pointPercent = Math.round((sprint.done / sprint.planned) * 100);
+      const issuePercent = Math.round((sprint.issuesDone / sprint.issueTotal) * 100);
+      const remainingPoints = Math.max(0, sprint.planned - sprint.done);
+      const netScope = sprint.added - sprint.removed;
+      const blockers = sprint.blockers.length;
+      const hasCurrentData = sprint.elapsed < 14;
+
+      document.querySelector("#points-value").textContent = `${sprint.done} / ${sprint.planned}`;
+      document.querySelector("#points-note").textContent = `${pointPercent}% of planned story points complete`;
+      document.querySelector("#points-progress").setAttribute("aria-valuenow", String(pointPercent));
+      document.querySelector("#points-fill").style.width = `${pointPercent}%`;
+      document.querySelector("#issues-value").textContent = `${sprint.issuesDone} / ${sprint.issueTotal}`;
+      document.querySelector("#issues-note").textContent = `${issuePercent}% of sprint issues complete`;
+      document.querySelector("#issues-progress").setAttribute("aria-valuenow", String(issuePercent));
+      document.querySelector("#issues-fill").style.width = `${issuePercent}%`;
+      document.querySelector("#blocked-value").textContent = String(blockers);
+      document.querySelector("#blocked-note").textContent = blockers ? "Needs team attention" : "No blocked issues reported";
+      document.querySelector("#added-value").textContent = `+${sprint.added} added`;
+      document.querySelector("#removed-value").textContent = `−${sprint.removed} removed`;
+      document.querySelector("#planned-value").textContent = `${sprint.planned} points`;
+      document.querySelector("#remaining-value").textContent = `${remainingPoints} points`;
+      document.querySelector("#net-scope-value").textContent = `${netScope > 0 ? "+" : ""}${netScope} points`;
+      document.querySelector("#net-scope-value").className = `side-stat-value ${netScope > 0 ? "warn" : netScope < 0 ? "good" : ""}`;
+      document.querySelector("#elapsed-value").textContent = hasCurrentData ? `Day ${sprint.elapsed} of 14` : "14 of 14 days";
+      document.querySelector("#blocker-count").textContent = `${blockers} ${blockers === 1 ? "issue" : "issues"}`;
+      document.querySelector("#change-count").textContent = `${sprint.changes.length} changes · +${sprint.added} / −${sprint.removed} pts`;
+      document.querySelector("#chart-subtitle").textContent = `Remaining story points · ${sprint.name}`;
+
+      const healthNote = document.querySelector("#health-note");
+      if (blockers) {
+        healthNote.innerHTML = `<span aria-hidden="true">●</span><span><strong>${blockers} issue${blockers === 1 ? "" : "s"} blocked.</strong> Review owners and dependencies in the table below.</span>`;
+      } else {
+        healthNote.innerHTML = `<span aria-hidden="true">●</span><span><strong>No active blockers reported.</strong> Keep the team status up to date as work progresses.</span>`;
+      }
+
+      renderTableRows("#blockers-table", sprint.blockers, (issue) =>
+        `<tr><td class="issue-key">${issue.key}</td><td class="issue-summary">${issue.summary}<br><span class="status-pill">Blocked</span></td><td class="owner-cell">${issue.owner}</td><td class="age-cell">${issue.age}</td></tr>`,
+        "No blocked issues reported for this sprint.", 4);
+      renderTableRows("#changes-table", sprint.changes, (change) =>
+        `<tr><td class="issue-key">${change.key}</td><td class="issue-summary">${change.summary}</td><td><span class="change-pill ${change.kind === "Added" ? "add" : "remove"}">${change.kind}</span></td><td class="change-points">${change.kind === "Added" ? "+" : "−"}${change.points}</td></tr>`,
+        "No scope changes reported for this sprint.", 4);
+
+      renderChart(sprint);
+    }
+
+    select.addEventListener("change", () => renderSprint(sprints[Number(select.value)]));
+    renderSprint(sprints[0]);
+  </script>
+</body>
+</html>
