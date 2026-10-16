@@ -17,3 +17,20 @@
 - Fix 2 failing rest-rule tests; target 100% pass.
 - Generate first draft roster and review fairness totals.
 - Build mock publisher and publish endpoint.
+
+## Charts
+- Work items by status (sample data).
+```mermaid
+pie title Work Items by Status (Sample Data)
+    "Done" : 5
+    "In Progress" : 4
+    "Blocked" : 3
+```
+- Unit tests passed per week (sample data).
+```mermaid
+xychart-beta
+    title "Unit Tests Passed per Week (Sample Data)"
+    x-axis [W1, W2, W3, W4]
+    y-axis "Tests passed" 0 --> 40
+    bar [8, 18, 30, 38]
+```
