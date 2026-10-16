@@ -1,0 +1,8 @@
+{
+  "servers": {
+    "echo-windows": {
+      "command": "powershell",
+      "args": ["-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/.vscode/mcp-echo.ps1"]
+    }
+  }
+}
