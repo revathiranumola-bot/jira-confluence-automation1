@@ -225,7 +225,11 @@ Each decision is a configuration input. Defaults are used for development only a
 ## GitHub Issues
 | Issue URL | Title | Created via MCP? |
 |-----------|-------|-----------------|
-| https://github.com/revathiranumola-bot/jira-confluence-automation/issues/1 | Create repo layout: `roster/core/` (pure scheduling logic), `roster/servicenow/` (adapter), `roster/api/` (FastAPI), `roster/web/` (UI), `tests/`, `docs/` | No |
+| https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/3 | Add dependencies: FastAPI, Uvicorn, Pydantic, `tzdata`, a holiday library (e.g. `holidays`), pytest, httpx | No |
+| https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/28 | Build the shift calendar: for each of the 42 days, generate day (09:00–21:00) and night (21:00–09:00 next day) shifts as tz-aware instants | Yes |
+| https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/30 | Compute shift duration from actual instants, not a fixed 12 hours | Yes |
+| https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/35 | Rule: no person has overlapping shifts | Yes |
+| https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/36 | Rule: at least 12 hours between the end of a person's shift and the start of their next one (instant-based) | Yes |
 
 ## MCP Tools Used
 - github-mcp-server-search_users
@@ -233,3 +237,9 @@ Each decision is a configuration input. Defaults are used for development only a
 - github-mcp-server-get_file_contents
 - github-mcp-server-list_issues
 - github-mcp-server-issue_read
+- create_issue
+- update_issue
+- add_issue_labels
+- create_label
+- add_issue_comment
+- remove_issue_labels

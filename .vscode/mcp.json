@@ -1,4 +1,12 @@
 {
+  "inputs": [
+    {
+      "id": "githubToken",
+      "type": "promptString",
+      "description": "GitHub token with Issues read/write permission",
+      "password": true
+    }
+  ],
   "servers": {
     "echo-windows": {
       "command": "powershell",
@@ -15,6 +23,13 @@
     "github": {
       "type": "http",
       "url": "https://api.githubcopilot.com/mcp/"
+    },
+    "github-write-windows": {
+      "command": "powershell",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}/.vscode/github.ps1"],
+      "env": {
+        "GITHUB_TOKEN": "${input:githubToken}"
+      }
     }
   }
 }
