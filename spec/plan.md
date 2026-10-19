@@ -5,7 +5,9 @@
 **Project principles:** [constitution.md](./constitution.md)
 
 **Review and open decisions:** [clarify.md](./clarify.md)
-**Status:** Proposed — resolve the decision gates below before production work.
+**Decision record:** [decisions.md](./decisions.md)
+**Status:** Proposed — BE-01 prototype gates are approved; remaining
+production and scheduling gates below remain open.
 
 ## Plan objectives
 
@@ -25,18 +27,19 @@
 
 Before production implementation begins, the product owner must address:
 
-1. **Product boundary (C-01):** Decide whether the ServiceNow roster is a
-   distinct feature governed by the current Jira/Confluence-oriented
-   constitution. Resolve the mismatch or mark the roster feature out of scope.
+1. **Product boundary (C-01): Resolved for prototype (DEC-001).** The roster
+   is a distinct feature governed by the constitution alongside Sprint Pulse.
 2. **Scheduling inputs (S-01–S-07):** Confirm the time-zone interpretation,
    final-night boundary, actual-hours fairness meaning, team membership and
    eligibility, weekend/holiday rules, and any availability policy.
-3. **Prototype integration boundary (A-05, A-06):** Confirm that the prototype
-   uses a mock ServiceNow adapter and local-only identity, or supply approved
-   production API, authorization, and outcome-reconciliation requirements.
-4. **Lifecycle and persistence (C-03, L-01–L-03, D-01):** Approve the local
-   PostgreSQL ownership model, approval identity/workflow, revision freshness,
-   and whether incomplete drafts are persisted.
+3. **Prototype integration boundary (A-05, A-06): Resolved for prototype
+   (DEC-004, DEC-005).** Use a mock-only publisher and localhost-only
+   development identity. Production API, authorization, and
+   outcome-reconciliation requirements remain open.
+4. **Persistence (C-03, S-08): Resolved for prototype (DEC-002, DEC-003).**
+   PostgreSQL owns local workflow state and infeasible generation fails
+   atomically. Approval workflow, revision freshness, and production data
+   retention remain open (L-01–L-03, D-01).
 
 Until those decisions are resolved, implement only local, non-production
 functionality that does not depend on guessed settings. Do not make live
@@ -57,8 +60,8 @@ ServiceNow writes.
   framework and a local-only seed/configuration path for explicitly supplied
   team members.
 - Define API response/error conventions and request validation based on
-  A-03. Keep application identity and authorization policy local-only until
-  L-01/A-06 decisions are approved.
+  A-03. Use the documented localhost-only prototype identity (DEC-004);
+  production identity and authorization remain out of scope until approved.
 - Create backend test configuration and database-test setup that uses
   isolated test data and does not call ServiceNow.
 
@@ -177,10 +180,12 @@ presented as real CPS identities.
 - Optimize fairness in the approved order: total hours, night shifts, then
   weekend/holiday shifts. Use deterministic tie-breaking or persist the
   approved seed.
-- Handle infeasibility according to the approved partial-draft policy: report
-  affected shifts and constraints, and never relax hard constraints.
-- Persist generation outcome, shifts, and reproducibility inputs atomically
-  or persist an explicitly invalid partial draft if S-08 is approved.
+- Handle infeasibility according to the approved atomic-failure policy
+  (DEC-003): report affected shifts and constraints, and never relax hard
+  constraints.
+- Persist successful generation outcome, shifts, and reproducibility inputs
+  atomically. On infeasibility, persist no roster or partial assignments and
+  return no roster ID.
 
 **Acceptance gate:** Unit tests cover ordinary dates, period boundaries,
 weekends/holidays, DST transitions for the approved zone, minimum-rest
@@ -306,9 +311,9 @@ itself.** Those require separate approval and environment-specific validation.
 
 | Milestone | Outcome | Depends on |
 |---|---|---|
-| 1.1 | Backend boots with safe API skeleton | Project scope decision |
+| 1.1 | Backend boots with safe API skeleton | Product/constitution scope (DEC-001) |
 | 1.2 | PostgreSQL 15 and migrations run locally | Docker configuration |
-| 1.3 | Approved logical schema and persistence boundary | Database ownership decision |
+| 1.3 | Approved logical schema and persistence boundary | Database ownership (DEC-002) |
 | 2.1 | React/Vite app and routes run locally | API contract baseline |
 | 2.2 | UI states and screen contracts are represented | Screen/API response mapping |
 | 3.1 | Team, roster setup, and listing | Team and configuration policies |

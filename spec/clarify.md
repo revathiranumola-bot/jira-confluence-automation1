@@ -33,6 +33,11 @@ ready. The most significant issues are:
 5. The logical PostgreSQL model does not yet fully enforce roster membership,
    eligible assignment, revision freshness, and publish-attempt integrity.
 
+**Decision update (2026-10-19):** The product owner subsequently resolved
+C-01, C-03, S-08, A-05, and A-06 for prototype scope. Their accepted outcomes
+are recorded in [decisions.md](./decisions.md); all other recommendations in
+this review remain proposals unless separately approved.
+
 ## 1. Cross-document scope and architecture
 
 ### C-01 — Product identity and integration do not match
@@ -58,6 +63,11 @@ project identity, target user, and permitted integrations, or explicitly
 declare the roster feature out of scope for that project. Do not treat the
 Jira/Confluence adapter guidance as a substitute for ServiceNow-specific
 authorization and API decisions.
+
+**Decision status (2026-10-19): Resolved for prototype.** The product owner
+confirmed the roster as a distinct feature in this repository. The constitution
+now governs both distinct workflows under the CPS Automation Prototypes
+umbrella. See [DEC-001](./decisions.md#dec-001--product-boundary-and-constitution-applicability).
 
 ### C-02 — Folder convention differs from the existing skeleton
 
@@ -93,6 +103,11 @@ required:**
 
 If ServiceNow must instead be authoritative before publication, revise the
 model and offline behavior accordingly.
+
+**Decision status (2026-10-19): Resolved for prototype.** PostgreSQL owns local
+draft/workflow data; ServiceNow owns a roster only after a separately approved
+live integration confirms publication. See
+[DEC-002](./decisions.md#dec-002--postgresql-and-servicenow-data-ownership).
 
 ## 2. Scheduling behavior
 
@@ -233,6 +248,11 @@ returns a roster ID.
 
 Confirm whether partial drafts are useful to the scrum master; otherwise mark
 partial-draft persistence out of scope and fail generation atomically.
+
+**Decision status (2026-10-19): Resolved.** Generation fails atomically when
+any required shift cannot be filled or any hard constraint is unsatisfied.
+No partial roster or roster ID is persisted/returned. See
+[DEC-003](./decisions.md#dec-003--infeasible-generation-and-partial-drafts).
 
 ### S-09 — Shift capacity and feasibility have no defined guarantee
 
@@ -393,6 +413,11 @@ confirmation/read-back behavior are specified. Use a clearly labelled
 simulator/mock adapter for end-to-end prototype demonstrations; never show a
 mock result as a real ServiceNow publish.
 
+**Decision status (2026-10-19): Prototype boundary resolved.** Publishing is
+mock-only; no live adapter, credentials, or writes are permitted. Production
+integration and reconciliation remain unresolved. See
+[DEC-005](./decisions.md#dec-005--prototype-publishing-boundary).
+
 ### A-06 — API security requirements have no prototype identity contract
 
 **Impact:** High before real writes. The constitution requires authorization,
@@ -411,6 +436,12 @@ actor IDs originate, or whether local/demo endpoints are protected.
 **Out of scope — prototype:** Enterprise SSO, multi-user role administration,
 and production identity-provider integration. These remain release blockers
 for any deployment with real roster or ServiceNow access.
+
+**Decision status (2026-10-19): Prototype boundary resolved.** Use a documented
+local-development identity for local demonstrations/tests and bind the
+prototype backend only to localhost. Production authentication and
+authorization remain unresolved and block deployment. See
+[DEC-004](./decisions.md#dec-004--prototype-identity-boundary).
 
 ## 4. Data model and integrity
 

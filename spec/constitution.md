@@ -1,44 +1,48 @@
-# Project Constitution: Jira/Confluence Automation
+# Project Constitution: CPS Automation Prototypes
 
 ## Project identity
 
-- **Project name:** CPS Sprint Pulse (working name for the Jira/Confluence
-  automation prototype).
-- **Purpose:** Give the CPS team an at-a-glance view of sprint progress,
-  delivery pace, blockers, and scope changes, with a foundation for approved
-  Jira/Confluence automation. The initial dashboard uses clearly labeled demo
-  data; live Jira and Confluence workflows remain subject to platform and
-  integration decisions.
-- **Target users:** CPS team members reviewing sprint health. Integration and
-  administrative workflows are for authorized users; define their roles and
-  permissions in the feature specification before implementation.
+- **Project name:** CPS Automation Prototypes (umbrella for distinct CPS
+  Sprint Pulse and CPS On-Call Roster workflows).
+- **Purpose:** Provide separate prototypes for reviewing sprint health through
+  Jira/Confluence and for drafting, validating, and reviewing CPS on-call
+  rosters for eventual ServiceNow publishing. The workflows have distinct
+  product requirements and integrations; neither is a substitute for the
+  other.
+- **Target users:** CPS team members reviewing sprint health and the scrum
+  master managing on-call rosters. Integration and administrative workflows
+  are for authorized users; define their roles and permissions in each feature
+  specification before implementation.
 
 ## Purpose
 
-These principles govern design and implementation of the Jira/Confluence
-automation project. They are binding across features and must be reflected in
-specifications, plans, implementation tasks, and verification. When requirements
-conflict with a principle, document the conflict and obtain explicit approval
-before proceeding.
+These principles govern design and implementation of CPS Automation
+Prototypes, including the distinct CPS Sprint Pulse and CPS On-Call Roster
+features. They are binding across features and must be reflected in
+specifications, plans, implementation tasks, and verification. When
+requirements conflict with a principle, document the conflict and obtain
+explicit approval before proceeding.
 
 ## Principles
 
 ### 1. Specify behavior before implementation
 
-- Define user goals, scope, acceptance criteria, failure behavior, and relevant
-  Jira/Confluence permissions before implementing a feature.
+- Define user goals, scope, acceptance criteria, failure behavior, and
+  relevant external-service permissions before implementing a feature.
 - Treat approved feature specifications and this constitution as the source of
   truth; update them when requirements change.
 - Identify unresolved product or integration decisions explicitly. Do not
-  invent Jira or Confluence workflows, permissions, or destructive behavior.
+  invent Jira, Confluence, or ServiceNow workflows, permissions, or
+  destructive behavior.
 
 ### 2. Keep the architecture clear and maintainable
 
 - Use React 18 with Vite for the frontend and Node.js with Express for the
   backend.
-- Keep Jira/Confluence API access, credentials, authorization checks, and
-  integration logic on the backend; the browser must not receive application
-  secrets.
+- Keep Jira/Confluence and ServiceNow API access, credentials, authorization
+  checks, and integration logic on the backend; the browser must not receive
+  application secrets. A feature may use only integrations explicitly
+  approved for that feature.
 - Separate HTTP routes, business logic, persistence, and external-service
   adapters so each can be tested independently.
 - Prefer small, focused changes and existing project conventions over
@@ -48,7 +52,7 @@ before proceeding.
 
 - Store secrets outside source control and browser-delivered code; use the
   deployment environment's approved secret-management mechanism.
-- Request only the Jira and Confluence scopes necessary for the approved
+- Request only the external-service scopes necessary for an approved
   workflow, and enforce authorization on the server for every protected
   operation.
 - Validate and constrain untrusted input at API boundaries. Use parameterized
@@ -59,7 +63,7 @@ before proceeding.
 ### 4. Make external changes safe and transparent
 
 - Distinguish read operations from operations that create, update, delete, or
-  publish Jira/Confluence content.
+  publish external-service content, including Jira/Confluence and ServiceNow.
 - Make write operations explicit, permission-checked, and auditable. Require
   user confirmation for destructive or bulk changes unless an approved
   specification defines a safer, explicit workflow.
@@ -87,15 +91,15 @@ before proceeding.
 - Cover API behavior and critical user-visible flows with appropriate
   integration or end-to-end tests.
 - Use deterministic tests and fixtures; do not make routine tests depend on
-  live Jira or Confluence accounts or production data.
+  live Jira, Confluence, or ServiceNow accounts or production data.
 - Run relevant tests and checks before considering a change complete, and
   report checks that could not be run.
 
 ### 7. Provide usable, observable workflows
 
 - Present clear loading, success, empty, and error states in the frontend.
-- Make the target Jira/Confluence resource and the effect of a write operation
-  understandable before it is performed.
+- Make the target external-service resource and the effect of a write
+  operation understandable before it is performed.
 - Record operationally useful errors and outcomes without exposing secrets or
   excessive user content.
 - Keep configuration and startup instructions sufficient to run the frontend,
@@ -110,11 +114,13 @@ before proceeding.
   image for local development. Keep deployments on PostgreSQL 15; review and
   pin the image digest when reproducible patch-level deployments are required.
 - Docker: use Docker Compose for local frontend, backend, and database
-  orchestration. Do not require the application runtime to depend on a locally
-  running Jira or Confluence instance for routine development or tests.
-- Jira and Confluence integrations must use their approved APIs and
-  authentication mechanisms; select specific API scopes and workflows in
-  feature specifications rather than assuming them globally.
+  orchestration. Routine development and tests must not require a locally
+  running Jira, Confluence, or ServiceNow instance.
+- Jira, Confluence, and ServiceNow integrations must use their approved APIs
+  and authentication mechanisms; select specific API scopes and workflows in
+  feature specifications rather than assuming them globally. The on-call
+  roster prototype is mock-only for publishing and must not perform live
+  ServiceNow writes.
 
 ## Folder structure conventions
 
@@ -127,8 +133,10 @@ before proceeding.
 - Put backend source in `backend/src/`. Keep HTTP routes, application
   services, scheduling or domain logic, external Jira/Confluence adapters,
   and middleware in `routes/`, `services/`, `scheduling/`, `integrations/`,
-  and `middleware/`, respectively. Add a `repositories/` directory if
-  persistence logic grows beyond a small, clear service boundary.
+  and `middleware/`, respectively. Put approved external-service adapters
+  behind the integration boundary; feature-specific adapter locations must
+  be recorded in the feature specification. Add a `repositories/` directory
+  if persistence logic grows beyond a small, clear service boundary.
 - Keep automated tests under the root `tests/`, organized by concern, such as
   `tests/api/`, `tests/scheduling/`, and `tests/integrations/`. Do not mix test
   fixtures with production credentials or data.

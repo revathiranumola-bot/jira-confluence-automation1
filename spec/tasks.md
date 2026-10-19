@@ -35,6 +35,9 @@ approach before creating production-facing integration behavior.
 
 **Acceptance criteria:**
 
+- The approved BE-01 decisions, owner, and date are recorded in
+  [decisions.md](./decisions.md), with unresolved production decisions kept
+  separate.
 - Product owner decision is recorded for clarification C-01.
 - Database ownership and draft persistence policy are recorded for C-03 and
   S-08.

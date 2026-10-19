@@ -2,7 +2,10 @@
 
 **Feature branch**: `cps-on-call-roster`
 **Source**: `project_spec.md`
-**Status**: Draft — implementation-blocking decisions are listed in
+**Status**: Draft — prototype boundaries for product scope, persistence,
+infeasible generation, local identity, and publishing are approved in
+[decisions.md](./decisions.md). Scheduling and production-integration blockers
+remain listed in
 [Clarifications](#clarifications-required-before-production-implementation).
 
 ## Overview
@@ -10,8 +13,17 @@
 Create and maintain a six-week on-call roster for the five-person CPS team.
 The system must provide continuous day and night primary coverage, help the
 scrum master distribute shifts fairly, and support drafting, review, editing,
-validation, and publishing the approved roster as a new CPS roster in
-ServiceNow.
+validation, and simulating the publish workflow for an approved roster. Live
+ServiceNow publishing is a separate production capability and is not enabled
+by this specification's prototype scope.
+
+This is a distinct feature from the CPS Sprint Pulse Jira/Confluence
+dashboard. For the prototype, PostgreSQL is the system of record for local
+roster drafts, edits, validation history, and publish attempts; ServiceNow is
+the destination system of record for a confirmed published roster. Prototype
+publishing uses a clearly labelled mock only and performs no live ServiceNow
+writes. The local-development identity is limited to localhost demonstrations
+and tests and does not authorize deployment or production access.
 
 The roster is on-call duty assignment, not a claim that the assigned person
 actively works for the full shift. The scrum master owns review, editing, and
@@ -109,40 +121,37 @@ reported.
    **then** it does not silently discard or represent the change as a
    successfully validated roster.
 
-### Scenario 4 — Publish an approved draft as a new ServiceNow roster
-(Priority: P1)
+### Scenario 4 — Simulate publishing an approved draft
+(Prototype scope)
 
-As the scrum master, I can publish a reviewed and valid roster as a new CPS
-roster in ServiceNow so that approved assignments are maintained in the
-destination system.
+As the scrum master, I can simulate publishing a reviewed and valid roster so
+that I can review the prototype workflow without making a live ServiceNow
+change.
 
-**Why this priority**: Publishing to ServiceNow is the specified destination
-and final step of the core workflow.
+Live ServiceNow publishing remains a future production capability and is not
+part of this prototype.
 
-**Independent test**: With an approved valid draft and a configured
-ServiceNow test integration, verify the new roster and assignments are
-persisted and the outcome is reported accurately. Exercise authorization,
-network, and API failure paths without using production data.
+**Independent test**: With an approved valid draft, exercise deterministic
+mock success, failure, and uncertain outcomes. Verify every outcome is
+labelled simulated and no ServiceNow request is made.
 
 **Acceptance scenarios**:
 
 1. **Given** a reviewed draft that passes all required hard validations and
-   the required ServiceNow configuration, **when** the scrum master publishes
-   it, **then** the system creates a new CPS roster with each assignment's
-   shift date/type, start/end, primary, and applicable time-zone context.
+   the local prototype identity, **when** the scrum master requests publish,
+   **then** the mock reports a simulated outcome without making a live
+   ServiceNow write.
 2. **Given** a draft with a missing shift or an unresolved hard-constraint
    failure, **when** publishing is requested, **then** the system prevents
    publication and identifies the reason.
-3. **Given** ServiceNow rejects the request or a network/authentication error
-   occurs, **when** publishing is attempted, **then** the failure is surfaced
-   and is not represented as a successful publish.
+3. **Given** the mock rejects the request, **when** publishing is attempted,
+   **then** the failure is surfaced and is not represented as a successful
+   publish.
 4. **Given** an uncertain or partial publish outcome, **when** the system
-   reports the result, **then** it does not claim complete success unless that
-   success is confirmed; it reports the known outcome and unresolved status.
-5. **Given** an existing ServiceNow roster for the period, **when** a new
-   roster is published, **then** the system does not overwrite that roster.
-   Updating an already-published roster requires a separately approved
-   workflow.
+   reports the result, **then** it remains clearly simulated and does not
+   claim a real ServiceNow outcome.
+5. The prototype makes no ServiceNow network request and cannot overwrite an
+   existing ServiceNow roster.
 6. **Given** a successful publish, **when** the operation completes, **then**
    no shift reminders or schedule-change notifications are sent.
 
@@ -161,6 +170,10 @@ network, and API failure paths without using production data.
   they MUST NOT be fabricated.
 - **FR-005**: The system MUST NOT silently produce a complete/valid status if
   a shift is unfilled or a hard constraint is unsatisfied.
+- **FR-005a**: If generation cannot satisfy every required shift or hard
+  constraint, it MUST fail atomically: no roster or partial assignment set is
+  persisted, and no roster ID is returned. A later approved requirement may
+  define a separate incomplete-draft workflow.
 - **FR-006**: Draft generation MUST be reproducible for the same inputs and
   rules. If randomized tie-breaking is used, the seed/configuration MUST be
   exposed.
@@ -200,8 +213,10 @@ network, and API failure paths without using production data.
 
 ### ServiceNow publishing
 
-- **FR-020**: The system MUST publish an approved valid draft as a **new** CPS
-  roster in ServiceNow.
+- **FR-020**: The prototype MUST publish an approved valid draft only through
+  a clearly labelled mock adapter. It MUST NOT make live ServiceNow writes.
+  Live publishing as a **new** CPS roster in ServiceNow requires a separately
+  approved production integration specification and gate.
 - **FR-021**: Published assignment data MUST include shift date and type,
   start/end instants, the primary resource identifier, and applicable
   time-zone context.
@@ -213,9 +228,10 @@ network, and API failure paths without using production data.
   separately approved workflow.
 - **FR-024**: The system MUST NOT send shift reminders or schedule-change
   notifications.
-- **FR-025**: The system MUST use approved ServiceNow authentication and
-  authorization. Credentials MUST NOT be stored in source code or exposed in
-  logs.
+- **FR-025**: Prototype API operations MUST use a documented local-development
+  identity and the backend MUST bind only to localhost. This identity MUST
+  NOT be treated as production authentication or authorization. Live
+  ServiceNow credentials and writes are prohibited in the prototype.
 
 ## Key entities and data
 
@@ -362,19 +378,20 @@ states appropriate to their data and actions.
 
 The following are proposed **application-owned Express API** endpoints, not
 ServiceNow endpoints. Use a versioned `/api/v1` prefix and JSON requests and
-responses. Every endpoint MUST enforce the approved application authentication
-and authorization policy. The specific identity provider and role mapping
-remain unresolved.
+responses. In the prototype, the API is restricted to localhost and uses only
+the documented local-development identity. Do not expose it beyond the
+development environment. A production identity provider and role mapping
+remain unresolved and are required before deployment or live integration.
 
 | Method and path | Purpose and request data | Response data / behavior |
 |---|---|---|
 | `GET /api/v1/team-members` | List the configured CPS team members and eligibility; no request body. | Member IDs, display names, eligibility. Do not fabricate missing members. |
-| `POST /api/v1/rosters/drafts` | Generate and persist a draft. Body: `startDate`, `endDate`, `timeZoneId`, `teamMemberIds`, `weekendDefinition`, `holidayCalendarId`, and optional `generationSeed`. | `rosterId`, `status`, generated shifts, validation outcome, fairness totals, and seed/configuration when applicable. Return an actionable validation/configuration failure if required inputs or constraints are not satisfied. |
+| `POST /api/v1/rosters/drafts` | Generate and persist a draft. Body: `startDate`, `endDate`, `timeZoneId`, `teamMemberIds`, `weekendDefinition`, `holidayCalendarId`, and optional `generationSeed`. | On success, return `rosterId`, `status`, generated shifts, validation outcome, fairness totals, and seed/configuration when applicable. If required inputs are unresolved or constraints make complete generation infeasible, fail atomically, return an actionable error, and persist no roster or partial assignments. |
 | `GET /api/v1/rosters/{rosterId}` | Retrieve roster detail. | Roster configuration/state, ordered shifts, validation summary, fairness totals, and publication outcome if any. |
 | `GET /api/v1/rosters/{rosterId}/fairness` | Retrieve or recalculate fairness for a roster. | Per-member total hours, total shifts, night shifts, weekend/holiday shifts, and visible imbalance indicators. |
 | `PATCH /api/v1/rosters/{rosterId}/assignments/{assignmentId}` | Reassign a draft shift. Body: `primaryMemberId`. | Updated assignment and recalculated validation/fairness outcome. Reject changes to a published roster and identify hard-constraint failures. |
 | `POST /api/v1/rosters/{rosterId}/validate` | Revalidate current assignments; no request body required. | `valid` status, structured failures/warnings identifying affected shifts/resources, and recalculated fairness totals. |
-| `POST /api/v1/rosters/{rosterId}/publish` | Publish a valid, reviewed draft as a new ServiceNow roster; no body required unless the eventual integration requires additional approved metadata. | Roster state and publication outcome: confirmed success, failed, or uncertain/partial, plus a safe diagnostic/reference when available. Never claim confirmed success without confirmation. |
+| `POST /api/v1/rosters/{rosterId}/publish` | Simulate publishing an approved valid draft through the mock adapter; no body required. | Clearly labelled simulated outcome: confirmed mock success, failure, or uncertain/partial, plus a safe diagnostic. Never report a mock result as a real ServiceNow publish. |
 
 ### API data and error conventions
 
@@ -404,6 +421,11 @@ The following is the application-side logical model for PostgreSQL 15. It
 supports the required roster workflow without assuming ServiceNow table names
 or field names. Physical types, migration syntax, and ServiceNow mappings are
 confirmed during planning.
+
+PostgreSQL is authoritative for local drafts, edits, validation history, and
+publish attempts. ServiceNow is authoritative for a roster only after a
+separately approved live integration confirms publication; the prototype does
+not write to ServiceNow.
 
 ### `team_members`
 
@@ -533,7 +555,8 @@ personal or external issue content.
 - **Usability**: Make roster state, assignment ownership, coverage gaps, rest
   violations, fairness totals, and publish outcomes easy to distinguish.
 - **Reliability**: Do not show success for incomplete generation or an
-  unconfirmed/failed publish.
+  unconfirmed/failed publish. Clearly distinguish mock outcomes from live
+  external effects.
 - **Maintainability**: Keep schedule-generation rules separate from the
   ServiceNow adapter so the scheduling logic can be tested independently.
 - **Technology alignment**: Follow the project stack and development
@@ -554,8 +577,10 @@ personal or external issue content.
   four required fairness totals for each member.
 - **SC-006**: Editing a draft triggers revalidation, and a hard-constraint
   violation cannot be silently marked valid or published.
-- **SC-007**: Publishing creates a new ServiceNow CPS roster; the result is
-  accurately reported, and an existing roster is never overwritten.
+- **SC-007 (prototype)**: Mock publishing accurately reports a simulated
+  outcome and makes no ServiceNow request or write. Live creation of a new
+  ServiceNow CPS roster is a separate production acceptance criterion and is
+  not satisfied by mock success.
 - **SC-008**: The system sends no notifications.
 - **SC-009**: Unresolved configuration is named explicitly rather than
   silently guessed.
@@ -565,6 +590,8 @@ personal or external issue content.
 - Notifications or reminders.
 - Secondary/backup assignments.
 - Overwriting or updating an already-published roster.
+- Live ServiceNow writes, credentials, and publish reconciliation in the
+  prototype; these require a separately approved production integration gate.
 - A maximum-consecutive-shift rule.
 - Availability, planned leave, or preference behavior until a policy is
   approved.
