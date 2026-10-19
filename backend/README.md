@@ -52,3 +52,20 @@ The server is intentionally localhost-only and the current identity is not
 production authentication. Do not expose it beyond local development. Live
 ServiceNow publishing is out of scope; future publishing must remain behind a
 mock adapter unless a separate production integration decision is approved.
+
+## PostgreSQL development database
+
+From the repository root, copy `.env.example` to `.env`, replace the
+placeholder password with a unique local-only value, then start PostgreSQL:
+
+```powershell
+Copy-Item .env.example .env
+docker compose config
+docker compose up -d db
+docker compose ps
+docker compose exec -T db sh -c 'pg_isready -U "$POSTGRES_USER" -d "$POSTGRES_DB"'
+```
+
+The database port binds only to localhost and its data is kept in the named
+`postgres_data` volume. No reset or volume-deletion command is run
+automatically.
