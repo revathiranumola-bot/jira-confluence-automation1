@@ -28,41 +28,41 @@ Each decision is a configuration input. Defaults are used for development only a
 ## Phase 1: Setup
 
 ### 1.1 Project scaffolding
-- [ ] Create repo layout: `roster/core/` (pure scheduling logic), `roster/servicenow/` (adapter), `roster/api/` (FastAPI), `roster/web/` (UI), `tests/`, `docs/` — #1
-- [ ] Choose Python version and set up `pyproject.toml` with dependency management — #2
-- [ ] Add dependencies: FastAPI, Uvicorn, Pydantic, `tzdata`, a holiday library (e.g. `holidays`), pytest, httpx — #3
-- [ ] Add linting/formatting/type-checking (ruff, mypy) and a pre-commit config — #4
-- [ ] Add a CI workflow to run lint, type-check, and tests — #5
-- [ ] Add `.gitignore` and `.env.example`; ensure no secrets are committed — #6
+- [ ] Create repo layout: `roster/core/` (pure scheduling logic), `roster/servicenow/` (adapter), `roster/api/` (FastAPI), `roster/web/` (UI), `tests/`, `docs/` — [#1](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/1)
+- [ ] Choose Python version and set up `pyproject.toml` with dependency management — [#2](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/2)
+- [ ] Add dependencies: FastAPI, Uvicorn, Pydantic, `tzdata`, a holiday library (e.g. `holidays`), pytest, httpx — [#3](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/3)
+- [ ] Add linting/formatting/type-checking (ruff, mypy) and a pre-commit config — [#4](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/4)
+- [ ] Add a CI workflow to run lint, type-check, and tests — [#5](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/5)
+- [ ] Add `.gitignore` and `.env.example`; ensure no secrets are committed — [#6](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/6)
 
 ### 1.2 Configuration and settings
-- [ ] Define a settings model: time zone, roster start date, number of weeks (6), shift definitions, rest hours (12), max consecutive shifts (optional), weekend days, holiday calendar/region, fairness priority order — #7
-- [ ] Load settings from a config file and environment variables; keep credentials in environment variables or a secret store only — #8
-- [ ] Track which settings are confirmed vs defaulted, and expose that status through the API — #9
-- [ ] Fail with a clear error when a required setting is missing (time zone, holiday calendar) — #10
-- [ ] Ensure logging redacts credentials and tokens — #11
+- [ ] Define a settings model: time zone, roster start date, number of weeks (6), shift definitions, rest hours (12), max consecutive shifts (optional), weekend days, holiday calendar/region, fairness priority order — [#7](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/7)
+- [ ] Load settings from a config file and environment variables; keep credentials in environment variables or a secret store only — [#8](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/8)
+- [ ] Track which settings are confirmed vs defaulted, and expose that status through the API — [#9](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/9)
+- [ ] Fail with a clear error when a required setting is missing (time zone, holiday calendar) — [#10](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/10)
+- [ ] Ensure logging redacts credentials and tokens — [#11](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/11)
 
 ### 1.3 Domain model
-- [ ] Define `TeamMember` (stable ID, display name, eligibility flag) — #12
-- [ ] Define `ShiftType` (day, night) and `Shift` (date, type, start/end as tz-aware instants, tz identifier) — #13
-- [ ] Define `Assignment` (roster ID, shift, primary member ID, created/updated timestamps and actor) — #14
-- [ ] Define `Roster` (ID, state: draft/published, period, config snapshot, seed, assignments, audit metadata) — #15
-- [ ] Define `ValidationIssue` (severity, rule, shift/member references, message) — #16
+- [ ] Define `TeamMember` (stable ID, display name, eligibility flag) — [#12](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/12)
+- [ ] Define `ShiftType` (day, night) and `Shift` (date, type, start/end as tz-aware instants, tz identifier) — [#13](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/13)
+- [ ] Define `Assignment` (roster ID, shift, primary member ID, created/updated timestamps and actor) — [#14](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/14)
+- [ ] Define `Roster` (ID, state: draft/published, period, config snapshot, seed, assignments, audit metadata) — [#15](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/15)
+- [ ] Define `ValidationIssue` (severity, rule, shift/member references, message) — [#16](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/16)
 
 ### 1.4 ServiceNow integration spike (de-risk early)
-- [ ] Get access to a ServiceNow dev/test instance (blocked by D6) — #17
-- [ ] Investigate candidate data models/APIs for on-call schedules (e.g. Table API on rota/shift tables, on-call scheduling modules) and record findings — #18
-- [ ] Prototype authentication (OAuth or approved method) and confirm credentials are read from env/secret store only — #19
-- [ ] Prototype creating a single new roster with one shift assignment, including start/end and time-zone context — #20
-- [ ] Verify how DST and time-zone context are stored and returned — #21
-- [ ] Verify the ServiceNow API error responses for auth failure, permission denied, validation error, and network failure — #22
-- [ ] Verify whether a duplicate/existing roster can be detected (needed to avoid overwriting) — #23
-- [ ] Write spike results (chosen API, data mapping, limits, open risks) in `docs/servicenow-spike.md` and update D6/D7/D8 — #24
+- [ ] Get access to a ServiceNow dev/test instance (blocked by D6) — [#17](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/17)
+- [ ] Investigate candidate data models/APIs for on-call schedules (e.g. Table API on rota/shift tables, on-call scheduling modules) and record findings — [#18](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/18)
+- [ ] Prototype authentication (OAuth or approved method) and confirm credentials are read from env/secret store only — [#19](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/19)
+- [ ] Prototype creating a single new roster with one shift assignment, including start/end and time-zone context — [#20](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/20)
+- [ ] Verify how DST and time-zone context are stored and returned — [#21](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/21)
+- [ ] Verify the ServiceNow API error responses for auth failure, permission denied, validation error, and network failure — [#22](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/22)
+- [ ] Verify whether a duplicate/existing roster can be detected (needed to avoid overwriting) — [#23](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/23)
+- [ ] Write spike results (chosen API, data mapping, limits, open risks) in `docs/servicenow-spike.md` and update D6/D7/D8 — [#24](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/24)
 
 ### 1.5 Persistence
-- [ ] Choose local storage for draft/published rosters (e.g. SQLite via SQLAlchemy) — #25
-- [ ] Create the schema for rosters, assignments, config snapshots, and audit events — #26
-- [ ] Add migrations and a local dev seed script — #27
+- [ ] Choose local storage for draft/published rosters (e.g. SQLite via SQLAlchemy) — [#25](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/25)
+- [ ] Create the schema for rosters, assignments, config snapshots, and audit events — [#26](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/26)
+- [ ] Add migrations and a local dev seed script — [#27](https://github.com/revathiranumola-bot/jira-confluence-automation1/issues/27)
 
 ---
 
