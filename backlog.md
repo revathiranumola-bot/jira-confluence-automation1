@@ -135,10 +135,11 @@ Each decision is a configuration input. Defaults are used for development only a
 - [ ] Authenticate with the approved method; read credentials from env/secret store; never log them
 - [ ] Map the domain roster to the ServiceNow data model: roster record plus one record per assignment with start/end, primary resource, and time-zone context
 - [ ] Map internal member IDs to ServiceNow user/resource identifiers; fail on unmapped members
+- [ ] Extend `tools/validate_files_with_ai.py` with deterministic offline checks for structured multi-item data (for example, JSON roster and assignment records); use it to check mapping completeness, duplicate identities, expected item counts, and expected-vs-read-back key fields. Keep the existing Markdown checks and make the data format and comparison inputs explicit.
 - [ ] Create a **new** CPS roster; refuse and report if a roster with the same identity already exists (no overwrite)
 - [ ] Add timeouts, bounded retries for transient failures, and idempotency protection against duplicate creation
 - [ ] Handle partial-failure publishing (e.g. roster created but some assignments failed): roll back or clearly mark the result as failed; never show success
-- [ ] Verify post-publish by reading back and comparing record counts (84) and key fields
+- [ ] Verify post-publish by reading back and using the offline Python validator to compare record counts (84) and key fields; fail verification on any missing, extra, duplicate, or mismatched record
 
 ### 3.2 Publish workflow
 - [ ] `POST /rosters/{id}/publish` — re-run full validation, then call the publisher
