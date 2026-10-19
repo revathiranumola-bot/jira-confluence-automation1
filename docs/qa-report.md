@@ -6,12 +6,16 @@
 - **Application:** CPS On-Call Roster local prototype.
 - **Environment:** Windows; frontend at `http://127.0.0.1:5173/`,
   backend at `http://127.0.0.1:3001/`, and PostgreSQL 15 through Docker Compose.
-- **Latest tested application change:** Uncommitted favicon fix, retested in
-  Google Chrome at approximately 23:40 (UTC+05:30). The setup-preview
-  implementation is committed as `98289e1`.
+- **Latest tested application change:** Favicon fix, retested in Google Chrome
+  at approximately 23:40 (UTC+05:30), then committed locally as `b91578d`
+  (`fix: form validation error on submit`). This commit has not been pushed
+  during the session. The setup-preview implementation is committed and
+  pushed as `98289e1`.
 - **Current result:** The approved local-only setup-preview flow passes its
   browser checks and automated regression tests. The complete roster lifecycle
   is not implemented or end-to-end verified.
+- **Report update:** Consolidates session evidence through the favicon retest;
+  no additional application tests were run solely to rewrite this report.
 
 Testing began with an overview dashboard and six placeholder workflow pages.
 The requested form-submission test was initially blocked because setup had no
@@ -29,7 +33,7 @@ the Google Chrome retest recorded below.
 | Frontend automated regression tests | PASS - 14 passed, 0 failed | One Vitest file; application shell, setup validation, submission, editing, and reset behavior |
 | Main page loading | PASS - 7 of 7 routes | All main routes returned HTTP 200 in the pre-fix sweep |
 | Setup-preview browser flow | PASS after fix | Both setup entry links, empty-form rejection, valid submission, matching summary, editing, and clearing on reload |
-| Console monitoring | PASS within observed scope | No warnings, console errors, or uncaught JavaScript exceptions during the seven-page load sweep |
+| Console monitoring | PASS on final Chrome retest | Initial integrated-browser sweep was clean; later Chrome testing found a favicon 404, which was fixed and retested without observed errors or warnings |
 | Post-fix interaction monitoring | PASS within observed scope | No observed warnings, console errors, exceptions, or HTTP errors during the monitored submission/edit flow |
 | Local service checks | PASS at time checked | Backend running response, frontend HTTP 200, PostgreSQL healthy and accepting connections |
 | Frontend lint | PASS | `npm.cmd run lint` |
@@ -78,7 +82,8 @@ constitute full end-to-end roster validation or production sign-off.
 
 - Visited all seven main routes and inventoried their visible content and controls.
 - Captured desktop screenshots using headless Google Chrome at 1440 x 1100;
-  also opened the application in regular Chrome.
+  also captured the updated seven-page inventory at 1440 x 1200 and opened
+  the application in regular Chrome.
 - Used the VS Code integrated-browser tools for route snapshots, console
   monitoring, navigation, form entry, submission, and result verification.
 - Checked console warnings, console errors, and uncaught JavaScript exceptions
@@ -86,10 +91,18 @@ constitute full end-to-end roster validation or production sign-off.
 - Ran frontend regression tests, lint, a production build, and whitespace checks
   after implementing the setup flow.
 - Checked local backend HTTP response and PostgreSQL readiness.
+- Subsequently navigated all seven main pages in headless Google Chrome,
+  using sidebar links, and extracted their visible text and controls.
+- Tested setup submission in headless Google Chrome with mouse events for
+  links/buttons and input/change events for form values; monitored runtime,
+  console, browser log, and network events through the debugging protocol.
 
 Chrome DevTools MCP configuration was added during the session, but the browser
-interaction tests used the integrated-browser tools, not a verified Chrome
-DevTools MCP connection.
+tests used VS Code integrated-browser tools and, later, Google Chrome's
+debugging protocol directly. No Chrome DevTools MCP tools were invoked.
+Integrated-browser tool names used were `openBrowserPage`, `readPage`,
+`navigatePage`, `clickElement`, `screenshotPage`, and `runPlaywrightCode`.
+Direct Chrome automation ran through `powershell` with Node.js and Chrome.
 
 ## Local service checks
 
@@ -135,6 +148,27 @@ was inventoried, not functionally tested.
 | Validation `/validation` | Step 05, Validation details heading; coverage/eligibility/overlap/rest description; placeholder banner; overview link | Still a placeholder; no scheduling validation tested |
 | Publish result `/publish` | Step 06 heading; simulated-publishing warning; placeholder banner; overview link | Still a placeholder; no publish action or live ServiceNow write tested or enabled |
 
+### Updated form and result elements
+
+The later seven-page Chrome inventory inspected the implemented UI:
+
+- `/setup`: required Start date and End date inputs with calendar pickers;
+  required Time zone text input with placeholder `Asia/Kolkata or UTC`;
+  required Local demo member IDs multiline field (one per line); Preview setup
+  submit button; Back to roster overview link; local-only and reload warnings.
+- `/generation`, without submitted inputs: no-preview explanation and
+  Start roster setup link.
+- `/generation`, after submission: Setup summary heading; preview-only status;
+  submitted start/end dates, time zone, and member-ID list; Edit setup link;
+  explicit warnings that no roster was generated/saved and no scheduling
+  constraints were checked.
+- `/review`, `/fairness`, `/validation`, and `/publish`: placeholder text,
+  LOCAL ONLY badge, and Back to roster overview link remained visible.
+
+Navigation, required-field rejection, submission, summary, editing, and reload
+behavior were exercised. The Help button and decorative/status elements were
+inspected only. Calendar-picker interactions were not separately exercised.
+
 ### Overview details
 
 - **Active rosters:** no data connected.
@@ -156,10 +190,14 @@ completed validation.
 | QA-02 | Initial Configure roster interaction timed out | Two mouse-click attempts timed out while waiting for actionability; keyboard activation also failed to navigate in the original shared tab | Not reproduced in a fresh integrated-browser tab. Both setup links subsequently worked; no speculative navigation-code fix was applied |
 | QA-03 | Full roster lifecycle unavailable | Workflow pages were placeholders and no generated roster existed | Still out of scope for this fix; review/edit, fairness, scheduling validation, persistence, and publishing remain unverified |
 | QA-04 | Integrated-browser screenshots did not consistently honor requested desktop dimensions | The effective viewport remained constrained despite viewport-size requests | Desktop screenshots were recaptured using headless Google Chrome; not classified as an application defect |
+| QA-05 | Missing browser favicon (Low severity) | A fresh Google Chrome profile requested `/favicon.ico`; HTTP 404 produced a resource-loading console error during both flow testing and a console sweep | Fixed in `b91578d` by declaring and serving `/favicon.svg`; fresh Chrome retest observed HTTP 200 with SVG MIME type and no console/network errors |
 
-No JavaScript console errors, warnings, or uncaught exceptions were observed
-in the monitored all-page load sweep. Absence of console errors does not mean
-the missing business workflow was functional.
+The initial integrated-browser all-page sweep observed no JavaScript console
+errors, warnings, or uncaught exceptions. Later Chrome testing surfaced QA-05,
+a resource-loading error rather than a JavaScript exception. The final Chrome
+retest was clean within its monitored scope. No uncaught application JavaScript
+exception was observed. These checks do not establish full business-workflow
+functionality.
 
 ## Fixes applied
 
@@ -184,6 +222,14 @@ The result explicitly states that no roster has been generated or saved.
 Membership, eligibility, availability, coverage, rest, and fairness are not
 verified. Reloading clears the preview. No backend, database, or ServiceNow
 write is performed.
+
+Implemented in commit `b91578d`:
+
+- Added a branded [SVG favicon](../frontend/public/favicon.svg).
+- Declared it in the [HTML header](../frontend/index.html), preventing Chrome's
+  implicit missing `/favicon.ico` request during the verified fresh loads.
+- Verified that Chrome fetched the icon with HTTP 200 and `image/svg+xml`.
+- Verified that the production build includes the favicon and its HTML link.
 
 ## Post-fix verification
 
@@ -257,9 +303,31 @@ Screenshots are local session artifacts, not committed repository assets:
 C:\Users\RevathiAnumola\.copilot\session-state\1799f2ce-5260-43c7-b13a-2ceda40bfbd4\files
 ```
 
-The setup and generation screenshots show the original placeholders, not the
-post-fix form and summary. Post-fix evidence consists of browser checks and
-automated tests; no post-fix screenshots were captured in the session.
+The filenames above show the original placeholders. Later post-setup-fix Chrome
+captures at 1440 x 1200 are:
+
+| Page | Updated screenshot filename |
+|---|---|
+| Roster overview | `current-01-overview.png` |
+| Roster setup form | `current-02-setup.png` |
+| Generation result, no-preview state | `current-03-generation.png` |
+| Review & edit | `current-04-review.png` |
+| Fairness | `current-05-fairness.png` |
+| Validation | `current-06-validation.png` |
+| Publish result | `current-07-publish.png` |
+
+Additional local evidence:
+
+- `current-page-inventory.json`: visible text and controls from all seven
+  current pages, captured before the favicon fix.
+- `main-page-latest.png`: overview capture at 1440 x 1100.
+- `chrome-flow-result.png`: successful submitted summary before the favicon
+  fix, captured at 1440 x 1100.
+- `chrome-retest-result.png`: successful summary after the favicon fix,
+  captured at 1440 x 1100.
+
+All files are in the session artifact directory above. They are local evidence
+and may not be accessible to other repository users.
 
 ## Related tooling changes
 
@@ -279,6 +347,10 @@ automated tests; no post-fix screenshots were captured in the session.
 **Verified working:** Local service availability at the time checked, all
 main route loads, local setup input validation, preview submission, summary
 content, editing, and intentional clearing on reload.
+The favicon now loads successfully, and no console errors/warnings, uncaught
+exceptions, failed requests, or HTTP errors were observed during the final
+Google Chrome route-and-flow retest. Four workflow routes still present
+placeholders; the generation-result route presents a setup preview only.
 
 **Still unavailable or unverified:**
 
