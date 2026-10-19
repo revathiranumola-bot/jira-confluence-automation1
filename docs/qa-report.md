@@ -2,20 +2,23 @@
 
 ## Summary
 
-- **Session date:** 2026-10-19 (UTC+05:30).
+- **Session dates:** 2026-10-19 through 2026-10-20 (UTC+05:30).
 - **Application:** CPS On-Call Roster local prototype.
 - **Environment:** Windows; frontend at `http://127.0.0.1:5173/`,
   backend at `http://127.0.0.1:3001/`, and PostgreSQL 15 through Docker Compose.
-- **Latest tested application change:** Favicon fix, retested in Google Chrome
-  at approximately 23:40 (UTC+05:30), then committed locally as `b91578d`
-  (`fix: form validation error on submit`). This commit has not been pushed
-  during the session. The setup-preview implementation is committed and
-  pushed as `98289e1`.
+- **Latest tested application change:** Favicon fix in `b91578d`; the
+  setup-preview implementation is in `98289e1`. Both were pushed earlier in
+  the session. Subsequent MCP configuration/documentation changes are in
+  `bbbeb05`; `c4569ee` adds the module reports and user-approved scratch/cache
+  files, not a new form fix. These last two commits remain local relative to
+  the checked `origin/main` tracking reference.
 - **Current result:** The approved local-only setup-preview flow passes its
   browser checks and automated regression tests. The complete roster lifecycle
   is not implemented or end-to-end verified.
-- **Report update:** Consolidates session evidence through the favicon retest;
-  no additional application tests were run solely to rewrite this report.
+- **Report update:** Includes the actual Chrome DevTools MCP page inventory,
+  setup-flow test, and fresh seven-page console sweep completed on
+  2026-10-20. No additional application tests were run solely to update this
+  report.
 
 Testing began with an overview dashboard and six placeholder workflow pages.
 The requested form-submission test was initially blocked because setup had no
@@ -26,7 +29,9 @@ No actual roster was generated, saved, validated, or published.
 ## Test result summary
 
 The results below summarize the checks executed in this session, including
-the Google Chrome retest recorded below.
+the direct Google Chrome retest and subsequent actual Chrome DevTools MCP
+checks. Automated test/build results are from the earlier application-change
+validation; they were not rerun for the later browser-only checks.
 
 ### Final results at a glance
 
@@ -42,6 +47,12 @@ the Google Chrome retest recorded below.
 - **Final browser diagnostics:** 0 observed console errors, warnings, uncaught
   exceptions, failed requests, or HTTP errors in the monitored Chrome retest.
 - **Quality gates:** Frontend lint, production build, and whitespace checks passed.
+- **Latest MCP flow:** Required-field rejection, valid submission, matching
+  summary, edit-value retention, and resubmission passed. Native date entry
+  required an MCP JavaScript fallback; see the limitation below.
+- **Latest MCP diagnostics:** No console errors, warnings, or assertions;
+  all 18 recorded flow requests returned HTTP 200 or 304. A separate fresh
+  load of each of the seven routes also produced no matching console messages.
 - **Unresolved observation:** Original-tab navigation timeout was not reproduced
   in fresh tabs; its cause remains unconfirmed.
 - **Verdict:** PASS for the local-only setup preview. Full roster generation,
@@ -60,6 +71,9 @@ the Google Chrome retest recorded below.
 | Frontend production build | PASS | `npm.cmd run build` |
 | Whitespace validation | PASS | `git diff --check` |
 | Original-tab navigation timeout | INCONCLUSIVE | Failed initially; not reproduced in a fresh tab, where both setup links passed |
+| Actual Chrome DevTools MCP inventory | PASS - 7 routes | Accessibility snapshots, visible-element inventory, and full-page screenshots at verified 1440 x 1100 viewport |
+| Actual Chrome DevTools MCP submission | PASS with date-entry workaround | Matching summary; retained edit values; successful resubmission; no console errors/warnings/assertions and 18 requests with HTTP 200/304 |
+| Latest MCP console-only sweep | PASS - 7 routes | Fresh page loads; no errors, warnings, or assertions; no forms submitted in this sweep |
 | Complete roster lifecycle | BLOCKED / NOT VERIFIED | Actual generation, persistence, assignment editing, fairness, scheduling validation, and publishing are outside the implemented preview |
 
 ### Google Chrome follow-up: favicon fix and retest
@@ -98,6 +112,43 @@ executed post-fix checks. No confirmed failure remains in that tested scope;
 the original-tab navigation issue remains unexplained. These results do not
 constitute full end-to-end roster validation or production sign-off.
 
+### Latest Chrome DevTools MCP execution
+
+The later checks invoked the configured Chrome DevTools MCP server through
+actual MCP JSON-RPC over stdio. They did not substitute integrated-browser
+actions or direct Chrome DevTools Protocol commands for MCP tools.
+
+| Check | Observed result |
+|---|---|
+| Main-page screenshot | Captured through MCP |
+| Seven-page navigation and inventory | All routes inspected; full-page screenshots and accessibility/DOM inventories saved; viewport verified as 1440 x 1100 |
+| Inventory setup state | Form left empty and unsubmitted; generation showed the no-preview state |
+| Overview -> Configure roster | Setup form opened |
+| Empty Preview setup submission | Stayed on `/setup`; error summary displayed; all four required fields marked invalid |
+| Valid inputs | Start `2026-10-20`, end `2026-10-31`, time zone `Asia/Kolkata`, IDs `demo-alice` and `demo-bob` |
+| Submit and verify | `/generation` displayed Setup summary; all values matched; no validation alerts remained |
+| Edit and resubmit | All values retained; resubmission displayed Setup summary |
+| Flow console diagnostics | No error, warning, or assertion messages, including preserved messages |
+| Flow network diagnostics | 18 recorded requests; all HTTP 200 or 304 |
+| Separate console sweep | Fresh loads of `/`, `/setup`, `/generation`, `/review`, `/fairness`, `/validation`, `/publish`: no error, warning, or assertion messages |
+
+**Automation limitation:** The first script incorrectly looked for date
+inputs as textboxes. After targeting their actual `Date` accessibility role,
+`fill_form` reported success but left both date values blank, and the initial
+submission did not reach the summary. The completed run verified those empty
+values and populated the dates through MCP `evaluate_script`, using native
+input setters and bubbling input/change events. Text and member fields used
+`fill_form`; buttons and links used `click`. This verifies application
+validation/submission after event-driven date entry, not calendar-picker or
+keyboard-only date usability. No application code was changed for this
+automation issue.
+
+The console-only sweep started a fresh application page because no application
+tab remained in the MCP-managed browser. It does not recover earlier browser
+history or exercise additional interactions. Reload clearing, reversed dates,
+and other validation cases retain their earlier browser/automated evidence;
+they were not all repeated in the latest MCP run.
+
 ## Scope and methods
 
 - Visited all seven main routes and inventoried their visible content and controls.
@@ -117,10 +168,19 @@ constitute full end-to-end roster validation or production sign-off.
   links/buttons and input/change events for form values; monitored runtime,
   console, browser log, and network events through the debugging protocol.
 
-Chrome DevTools MCP configuration was added during the session, but the browser
-tests used VS Code integrated-browser tools and, later, Google Chrome's
-debugging protocol directly. No Chrome DevTools MCP tools were invoked.
-Integrated-browser tool names used were `openBrowserPage`, `readPage`,
+Earlier tests used VS Code integrated-browser tools and, later, Google
+Chrome's debugging protocol directly. Subsequent tests used the configured
+Chrome DevTools MCP server over stdio, including snapshots, screenshots,
+form interaction, console messages, and network diagnostics.
+
+Chrome DevTools MCP tools invoked across these later checks:
+`list_pages`, `new_page`, `emulate`, `navigate_page`, `take_snapshot`,
+`evaluate_script`, `click`, `fill_form`, `wait_for`, `take_screenshot`,
+`list_console_messages`, and `list_network_requests`. MCP `tools/list` was
+also used to discover the advertised tool schemas; it is a protocol method,
+not a Chrome browser-action tool.
+
+Earlier integrated-browser tool names used were `openBrowserPage`, `readPage`,
 `navigatePage`, `clickElement`, `screenshotPage`, and `runPlaywrightCode`.
 Direct Chrome automation ran through `powershell` with Node.js and Chrome.
 
@@ -204,13 +264,14 @@ completed validation.
 
 ## Initial findings and dispositions
 
-| ID | Finding | Evidence / impact | Current disposition |
-|---|---|---|---|
-| QA-01 | Main submission flow blocked by missing setup form | `/setup` had 0 forms, 0 input fields, and 0 workflow buttons; no submission or result could be exercised | Resolved for the user-approved setup-preview scope. This was an intentional scaffold limitation, not an existing form-validation algorithm defect |
-| QA-02 | Initial Configure roster interaction timed out | Two mouse-click attempts timed out while waiting for actionability; keyboard activation also failed to navigate in the original shared tab | Not reproduced in a fresh integrated-browser tab. Both setup links subsequently worked; no speculative navigation-code fix was applied |
-| QA-03 | Full roster lifecycle unavailable | Workflow pages were placeholders and no generated roster existed | Still out of scope for this fix; review/edit, fairness, scheduling validation, persistence, and publishing remain unverified |
-| QA-04 | Integrated-browser screenshots did not consistently honor requested desktop dimensions | The effective viewport remained constrained despite viewport-size requests | Desktop screenshots were recaptured using headless Google Chrome; not classified as an application defect |
-| QA-05 | Missing browser favicon (Low severity) | A fresh Google Chrome profile requested `/favicon.ico`; HTTP 404 produced a resource-loading console error during both flow testing and a console sweep | Fixed in `b91578d` by declaring and serving `/favicon.svg`; fresh Chrome retest observed HTTP 200 with SVG MIME type and no console/network errors |
+| ID | Severity / classification | Finding | Evidence / impact | Current disposition |
+|---|---|---|---|---|
+| QA-01 | High - blocked requested flow | Main submission flow blocked by missing setup form | `/setup` had 0 forms, 0 input fields, and 0 workflow buttons | Resolved for approved setup-preview scope in `98289e1`; verified again through MCP. An intentional scaffold limitation, not an existing form-validation algorithm defect |
+| QA-02 | Medium - unconfirmed navigation observation | Initial Configure roster interaction timed out | Two click attempts timed out; keyboard activation also failed in the original shared tab | Not reproduced in fresh tabs or latest MCP flow; no speculative navigation-code fix |
+| QA-03 | Scope limitation, not a confirmed regression | Full roster lifecycle unavailable | Placeholder workflow pages and no generated roster | Still unavailable/unverified beyond setup preview |
+| QA-04 | Tooling limitation | Requested screenshot viewport not consistently honored | Integrated-browser viewport constrained; later docked MCP DevTools also constrained ordinary resizing | Direct Chrome captures and later MCP viewport emulation provided desktop evidence; latest MCP viewport verified at 1440 x 1100 |
+| QA-05 | Low - confirmed resource defect | Missing browser favicon | `/favicon.ico` HTTP 404 and resource-loading console error in fresh Chrome | Fixed in `b91578d` by declaring `/favicon.svg`; earlier fresh retest confirmed HTTP 200 and SVG MIME type |
+| QA-06 | Tooling limitation, not confirmed application defect | MCP date entry reported success without populating values | `fill_form` left native dates empty; initial summary wait timed out | Completed via MCP `evaluate_script` native setters/events; valid submission and retained values verified; date-picker usability not established |
 
 The initial integrated-browser all-page sweep observed no JavaScript console
 errors, warnings, or uncaught exceptions. Later Chrome testing surfaced QA-05,
@@ -300,6 +361,70 @@ Regression coverage includes:
 
 The entire backend or repository test suite was not run as part of this fix.
 
+## Test cases
+
+These cases document session evidence; adding this section did not execute
+new tests. PASS means the stated expectation was observed using the listed
+method, not that every browser or interaction method was covered. The rows
+are scenario-level cases and do not represent additional Vitest tests:
+the earlier automated run remains 14 passed, 0 failed in
+[App.test.jsx](../frontend/src/App.test.jsx).
+
+Unless overridden below, valid setup data is: start `2026-10-20`, end
+`2026-10-31`, time zone `Asia/Kolkata`, and member IDs `demo-alice` and
+`demo-bob`, one per line. Browser cases require the frontend running at
+`http://127.0.0.1:5173/`.
+
+### Executed functional and validation cases
+
+| ID | Test case / steps and data | Expected result | Recorded result / status | Evidence / method |
+|---|---|---|---|---|
+| TC-01 | Open `/` with no setup preview | Local-prototype label, empty drafts, and no-ServiceNow-write warning appear | PASS - expected empty state displayed | Earlier Vitest; Chrome/MCP page inventory |
+| TC-02 | From `/`, click Configure roster | `/setup` opens with required fields and Preview setup button | PASS - setup opened in fresh tabs; original shared-tab timeout remains QA-02 | Earlier Vitest/browser; latest MCP `click` and snapshot |
+| TC-03 | From `/`, click Set up a roster | Setup form opens | PASS | Earlier Vitest and integrated-browser test |
+| TC-04 | Open `/setup`; leave all four fields empty; click Preview setup | Remain on setup; summary alert and four invalid fields; no result summary | PASS - four invalid fields and rejection alert observed | Earlier Vitest/browser; latest MCP flow evidence |
+| TC-05 | Enter otherwise valid data with end `2026-10-19`; submit | Reject reversed range with end-date error | PASS - end date must be on or after start date | Earlier Vitest and direct Chrome retest; not repeated in latest MCP flow |
+| TC-06 | Enter otherwise valid data with time zone `Not/AZone`; submit | Reject unrecognized named time zone; no summary | PASS | Earlier Vitest |
+| TC-07 | Enter otherwise valid data with time zone `+05:30`; submit | Reject numeric-offset-only time zone; no summary | PASS | Earlier Vitest |
+| TC-08 | Enter otherwise valid data with member list `demo-alice` and ` demo-alice `; submit | Reject duplicate IDs after trimming | PASS - unique-member error displayed | Earlier Vitest |
+| TC-09 | Enter otherwise valid data with member list containing only spaces and a newline; submit | Reject empty normalized member list | PASS - at-least-one-member error displayed | Earlier Vitest |
+| TC-10 | Submit empty form, then correct all fields using valid data and submit again | Previous validation alert clears and Setup summary appears | PASS - no validation alerts remained on successful summary | Earlier Vitest; latest MCP flow |
+| TC-11 | Enter valid setup data; click Preview setup | Navigate to `/generation`; summary matches both dates, zone, and member IDs; show preview-only status | PASS - all values matched; no roster generated or saved | Earlier Vitest/browser; latest MCP flow and result screenshot |
+| TC-12 | Submit member IDs with surrounding whitespace and trailing blank line | Summary contains trimmed IDs and no blank member entries | PASS - `demo-alice` and `demo-bob` displayed | Earlier Vitest |
+| TC-13 | Submit start and end `2026-10-20` with time zone ` UTC ` | Accept single-day period; trim zone to `UTC` | PASS | Earlier Vitest |
+| TC-14 | After valid submission, click Edit setup | Return to form retaining submitted inputs | PASS - all four values retained in latest MCP check | Earlier Vitest/browser; latest MCP `evaluate_script` |
+| TC-15 | Edit accepted setup; change end date to `2026-11-01`; resubmit | Summary updates to changed end date | PASS | Earlier Vitest |
+| TC-16 | Open Edit setup after valid submission; resubmit unchanged data | Setup summary appears again | PASS | Latest MCP `click` and `wait_for` |
+| TC-17 | After successful preview, return to Roster overview | Overview still says No roster drafts yet | PASS - preview does not create a draft | Earlier Vitest |
+| TC-18 | Submit valid setup, then reload result page; automated equivalent unmounts/remounts app at `/generation` | No-preview message; Start roster setup link; new setup starts empty | PASS | Earlier direct Chrome reload test and Vitest remount case; not rerun in latest MCP flow |
+| TC-19 | Open `/generation` without in-memory setup | Explain no preview exists; offer Start roster setup | PASS | Earlier Vitest and latest MCP page inventory |
+| TC-20 | Visit `/`, `/setup`, `/generation`, `/review`, `/fairness`, `/validation`, `/publish`; inspect visible controls/text | Each main route renders its intended preview or placeholder state | PASS - seven routes inventoried and captured; placeholder business actions not implemented | Earlier Chrome; latest MCP snapshots, DOM inventories, and screenshots |
+| TC-21 | Render `/not-a-route` | Understandable Page not found heading | PASS | Earlier Vitest only; not a browser/MCP route check |
+
+### Executed diagnostic and tooling cases
+
+| ID | Test case / steps | Expected result | Recorded result / status | Evidence / method |
+|---|---|---|---|---|
+| TC-22 | Fresh-load each of the seven main routes; wait for document/fonts and inspect console | No JavaScript errors, warnings, or assertions during observed loads | PASS - no matching messages on all seven routes | Latest MCP `navigate_page`, `evaluate_script`, `list_console_messages`; session tool output |
+| TC-23 | After submit/edit/resubmit, inspect current and preserved console messages | No errors, warnings, or assertions from observed flow | PASS - no matching messages | `chrome-mcp-flow-evidence.json`; MCP `list_console_messages` |
+| TC-24 | Inspect network requests from observed setup flow | No recorded failed or HTTP-error responses | PASS - all 18 recorded requests returned HTTP 200 or 304 | `chrome-mcp-flow-evidence.json`; MCP `list_network_requests` |
+| TC-25 | Fresh-load app after favicon fix; inspect requested icon and production output | Declared SVG returns HTTP 200 with SVG MIME type; asset and declaration included in build | PASS - missing-icon defect QA-05 resolved | Earlier direct Chrome retest and production-build checks; not separately reasserted by latest MCP network list |
+| TC-26 | Emulate 1440 x 1100 desktop viewport; inspect dimensions and capture every main route | Verified viewport dimensions and seven saved full-page screenshots | PASS | MCP `emulate`, `evaluate_script`, `take_screenshot`; `chrome-mcp-page-inventory.json` |
+| TC-27 | Use MCP `fill_form` to populate both native date inputs, then inspect their values | Dates contain the requested ISO values | FAIL - tool reported success but left dates blank; automation limitation QA-06, not confirmed application defect | MCP snapshots/value inspection; completed flow used MCP native setters/events through `evaluate_script` |
+| TC-28 | Run frontend regression, lint, and production build after application fixes | Tests, lint, and build succeed | PASS - 14 tests passed; lint and build passed | Earlier commands listed under Automated checks; not rerun for this documentation update |
+
+### Not executed / unavailable cases
+
+These are explicit coverage gaps, not passing tests or newly approved
+implementation requirements.
+
+| ID | Scenario | Intended verification | Current status / reason |
+|---|---|---|---|
+| TC-29 | Enter dates using calendar popups or keyboard-only navigation | Date entry works through native user interactions without script setters | NOT TESTED - date controls inventoried; latest MCP flow used event-driven fallback |
+| TC-30 | Activate Help and audit keyboard/focus/accessibility behavior | Controls respond and meet agreed accessibility requirements | NOT TESTED - Help inventoried only; no comprehensive accessibility audit |
+| TC-31 | Generate, persist, edit, validate, and publish a roster | Correct business results across the complete approved lifecycle | BLOCKED / NOT VERIFIED - setup preview only; production rules unresolved; no live ServiceNow writes permitted |
+| TC-32 | Cross-browser, comprehensive responsive, performance/load, and security checks | Meet agreed compatibility, performance, and security criteria | NOT TESTED - session scope did not include these audits or acceptance thresholds |
+
 ## Screenshots
 
 Seven desktop screenshots were captured before the form fix:
@@ -346,6 +471,26 @@ Additional local evidence:
 - `chrome-retest-result.png`: successful summary after the favicon fix,
   captured at 1440 x 1100.
 
+Actual Chrome DevTools MCP evidence added later:
+
+| Page / check | Artifact filename |
+|---|---|
+| Initial MCP main-page capture | `chrome-mcp-main-page.png` |
+| Overview | `chrome-mcp-pages-01-overview.png` |
+| Setup form | `chrome-mcp-pages-02-setup.png` |
+| Generation, no-preview state | `chrome-mcp-pages-03-generation.png` |
+| Review & edit | `chrome-mcp-pages-04-review.png` |
+| Fairness | `chrome-mcp-pages-05-fairness.png` |
+| Validation | `chrome-mcp-pages-06-validation.png` |
+| Publish result | `chrome-mcp-pages-07-publish.png` |
+| Page snapshots and visible-element inventories | `chrome-mcp-page-inventory.json` |
+| Successful submitted setup summary | `chrome-mcp-flow-result.png` |
+| MCP flow calls and responses, including console/network diagnostics | `chrome-mcp-flow-evidence.json` |
+
+The seven-page MCP inventory was read-only; the submitted summary screenshot
+comes from the separate form-flow test. The subsequent console-only sweep
+returned its results in the session tool output, not a separate saved artifact.
+
 All files are in the session artifact directory above. They are local evidence
 and may not be accessible to other repository users.
 
@@ -353,10 +498,17 @@ and may not be accessible to other repository users.
 
 - Commit `4b95977` added the Chrome DevTools MCP configuration and PowerShell
   launcher.
-- The launcher starts Chrome with a dedicated profile and local debugging
-  endpoint on port 9222, then connects the MCP server.
-- JSON and PowerShell syntax checks passed. Actual MCP startup/handshake and
-  Chrome DevTools tool invocation were not verified in the session.
+- The original launcher used a dedicated profile and port-9222 debugging
+  endpoint. Commit `bbbeb05` switched to MCP-managed Chrome over a debugging
+  pipe, with all configured tool categories and optional capabilities.
+- Actual initialization and tool discovery succeeded; server version `1.11.0`
+  advertised 59 tools. This is availability evidence, not a claim that every
+  advertised capability was tested.
+- JavaScript evaluation is enabled; usage statistics and CrUX URL sharing are
+  disabled. Repository-scoped filesystem configuration and a separate browser
+  profile are documented in the [frontend README](../frontend/README.md).
+- Actual browser tool invocation is now verified by the page inventory,
+  screenshots, submission, console, and network checks above.
 - A headless Chrome screenshot command initially surfaced Chrome's
   screenshot-success message on stderr as a PowerShell error. The PNG was
   verified, and subsequent captures used `Start-Process` with exit-code checks.
@@ -367,9 +519,12 @@ and may not be accessible to other repository users.
 **Verified working:** Local service availability at the time checked, all
 main route loads, local setup input validation, preview submission, summary
 content, editing, and intentional clearing on reload.
-The favicon now loads successfully, and no console errors/warnings, uncaught
-exceptions, failed requests, or HTTP errors were observed during the final
-Google Chrome route-and-flow retest. Four workflow routes still present
+The earlier fresh Chrome retest confirmed the favicon fix and observed no
+console errors/warnings, uncaught exceptions, failed requests, or HTTP errors.
+The latest actual MCP flow also passed after the documented date-entry
+workaround, with no console errors/warnings/assertions and all 18 recorded
+requests returning HTTP 200/304. A separate latest seven-route MCP console
+sweep was clean on fresh page loads. Four workflow routes still present
 placeholders; the generation-result route presents a setup preview only.
 
 **Still unavailable or unverified:**
