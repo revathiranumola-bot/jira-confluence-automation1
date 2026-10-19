@@ -10,39 +10,35 @@ if (-not $npx) {
     throw "npx.cmd was not found. Install Node.js and ensure it is on PATH."
 }
 
-$debuggingUrl = "http://127.0.0.1:9222"
-$versionEndpoint = "$debuggingUrl/json/version"
-$browserVersion = $null
+$profilePath = Join-Path $env:LOCALAPPDATA "ChromeDevToolsMcp\all-tools-profile"
+$workspacePath = Split-Path -Parent $PSScriptRoot
+$serverArgs = @(
+    "-y",
+    "chrome-devtools-mcp@latest",
+    "--executablePath=$chromePath",
+    "--userDataDir=$profilePath",
+    "--workspace=$workspacePath",
+    "--chromeArg=--enable-features=WebMCP",
+    "--categoryInput=true",
+    "--categoryNavigation=true",
+    "--categoryEmulation=true",
+    "--categoryPerformance=true",
+    "--categoryNetwork=true",
+    "--categoryDebugging=true",
+    "--javascriptEvaluation=true",
+    "--categoryMemory=true",
+    "--categoryExtensions=true",
+    "--categoryExperimentalThirdParty=true",
+    "--categoryExperimentalWebmcp=true",
+    "--categoryPwa=true",
+    "--memoryDebugging=true",
+    "--experimentalDevtools=true",
+    "--experimentalVision=true",
+    "--experimentalIncludeAllPages=true",
+    "--slim=false",
+    "--no-performance-crux",
+    "--no-usage-statistics"
+)
 
-try {
-    $browserVersion = Invoke-RestMethod -Uri $versionEndpoint -TimeoutSec 2
-}
-catch {
-    $profilePath = Join-Path $env:LOCALAPPDATA "ChromeDevToolsMcp\chrome-profile"
-    New-Item -ItemType Directory -Path $profilePath -Force | Out-Null
-
-    Start-Process -FilePath $chromePath -ArgumentList @(
-        "--remote-debugging-port=9222",
-        "--user-data-dir=`"$profilePath`"",
-        "--no-first-run",
-        "--no-default-browser-check"
-    ) | Out-Null
-
-    $deadline = (Get-Date).AddSeconds(15)
-    while (-not $browserVersion -and (Get-Date) -lt $deadline) {
-        Start-Sleep -Milliseconds 250
-        try {
-            $browserVersion = Invoke-RestMethod -Uri $versionEndpoint -TimeoutSec 2
-        }
-        catch {
-            $browserVersion = $null
-        }
-    }
-}
-
-if (-not $browserVersion) {
-    throw "Chrome did not expose its DevTools endpoint at $versionEndpoint within 15 seconds."
-}
-
-& $npx.Source -y chrome-devtools-mcp@latest "--browser-url=$debuggingUrl" --no-usage-statistics
+& $npx.Source @serverArgs
 exit $LASTEXITCODE
