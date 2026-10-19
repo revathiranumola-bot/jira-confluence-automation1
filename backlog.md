@@ -28,41 +28,41 @@ Each decision is a configuration input. Defaults are used for development only a
 ## Phase 1: Setup
 
 ### 1.1 Project scaffolding
-- [ ] Create repo layout: `roster/core/` (pure scheduling logic), `roster/servicenow/` (adapter), `roster/api/` (FastAPI), `roster/web/` (UI), `tests/`, `docs/`
-- [ ] Choose Python version and set up `pyproject.toml` with dependency management
-- [ ] Add dependencies: FastAPI, Uvicorn, Pydantic, `tzdata`, a holiday library (e.g. `holidays`), pytest, httpx
-- [ ] Add linting/formatting/type-checking (ruff, mypy) and a pre-commit config
-- [ ] Add a CI workflow to run lint, type-check, and tests
-- [ ] Add `.gitignore` and `.env.example`; ensure no secrets are committed
+- [ ] Create repo layout: `roster/core/` (pure scheduling logic), `roster/servicenow/` (adapter), `roster/api/` (FastAPI), `roster/web/` (UI), `tests/`, `docs/` — #1
+- [ ] Choose Python version and set up `pyproject.toml` with dependency management — #2
+- [ ] Add dependencies: FastAPI, Uvicorn, Pydantic, `tzdata`, a holiday library (e.g. `holidays`), pytest, httpx — #3
+- [ ] Add linting/formatting/type-checking (ruff, mypy) and a pre-commit config — #4
+- [ ] Add a CI workflow to run lint, type-check, and tests — #5
+- [ ] Add `.gitignore` and `.env.example`; ensure no secrets are committed — #6
 
 ### 1.2 Configuration and settings
-- [ ] Define a settings model: time zone, roster start date, number of weeks (6), shift definitions, rest hours (12), max consecutive shifts (optional), weekend days, holiday calendar/region, fairness priority order
-- [ ] Load settings from a config file and environment variables; keep credentials in environment variables or a secret store only
-- [ ] Track which settings are confirmed vs defaulted, and expose that status through the API
-- [ ] Fail with a clear error when a required setting is missing (time zone, holiday calendar)
-- [ ] Ensure logging redacts credentials and tokens
+- [ ] Define a settings model: time zone, roster start date, number of weeks (6), shift definitions, rest hours (12), max consecutive shifts (optional), weekend days, holiday calendar/region, fairness priority order — #7
+- [ ] Load settings from a config file and environment variables; keep credentials in environment variables or a secret store only — #8
+- [ ] Track which settings are confirmed vs defaulted, and expose that status through the API — #9
+- [ ] Fail with a clear error when a required setting is missing (time zone, holiday calendar) — #10
+- [ ] Ensure logging redacts credentials and tokens — #11
 
 ### 1.3 Domain model
-- [ ] Define `TeamMember` (stable ID, display name, eligibility flag)
-- [ ] Define `ShiftType` (day, night) and `Shift` (date, type, start/end as tz-aware instants, tz identifier)
-- [ ] Define `Assignment` (roster ID, shift, primary member ID, created/updated timestamps and actor)
-- [ ] Define `Roster` (ID, state: draft/published, period, config snapshot, seed, assignments, audit metadata)
-- [ ] Define `ValidationIssue` (severity, rule, shift/member references, message)
+- [ ] Define `TeamMember` (stable ID, display name, eligibility flag) — #12
+- [ ] Define `ShiftType` (day, night) and `Shift` (date, type, start/end as tz-aware instants, tz identifier) — #13
+- [ ] Define `Assignment` (roster ID, shift, primary member ID, created/updated timestamps and actor) — #14
+- [ ] Define `Roster` (ID, state: draft/published, period, config snapshot, seed, assignments, audit metadata) — #15
+- [ ] Define `ValidationIssue` (severity, rule, shift/member references, message) — #16
 
 ### 1.4 ServiceNow integration spike (de-risk early)
-- [ ] Get access to a ServiceNow dev/test instance (blocked by D6)
-- [ ] Investigate candidate data models/APIs for on-call schedules (e.g. Table API on rota/shift tables, on-call scheduling modules) and record findings
-- [ ] Prototype authentication (OAuth or approved method) and confirm credentials are read from env/secret store only
-- [ ] Prototype creating a single new roster with one shift assignment, including start/end and time-zone context
-- [ ] Verify how DST and time-zone context are stored and returned
-- [ ] Verify the ServiceNow API error responses for auth failure, permission denied, validation error, and network failure
-- [ ] Verify whether a duplicate/existing roster can be detected (needed to avoid overwriting)
-- [ ] Write spike results (chosen API, data mapping, limits, open risks) in `docs/servicenow-spike.md` and update D6/D7/D8
+- [ ] Get access to a ServiceNow dev/test instance (blocked by D6) — #17
+- [ ] Investigate candidate data models/APIs for on-call schedules (e.g. Table API on rota/shift tables, on-call scheduling modules) and record findings — #18
+- [ ] Prototype authentication (OAuth or approved method) and confirm credentials are read from env/secret store only — #19
+- [ ] Prototype creating a single new roster with one shift assignment, including start/end and time-zone context — #20
+- [ ] Verify how DST and time-zone context are stored and returned — #21
+- [ ] Verify the ServiceNow API error responses for auth failure, permission denied, validation error, and network failure — #22
+- [ ] Verify whether a duplicate/existing roster can be detected (needed to avoid overwriting) — #23
+- [ ] Write spike results (chosen API, data mapping, limits, open risks) in `docs/servicenow-spike.md` and update D6/D7/D8 — #24
 
 ### 1.5 Persistence
-- [ ] Choose local storage for draft/published rosters (e.g. SQLite via SQLAlchemy)
-- [ ] Create the schema for rosters, assignments, config snapshots, and audit events
-- [ ] Add migrations and a local dev seed script
+- [ ] Choose local storage for draft/published rosters (e.g. SQLite via SQLAlchemy) — #25
+- [ ] Create the schema for rosters, assignments, config snapshots, and audit events — #26
+- [ ] Add migrations and a local dev seed script — #27
 
 ---
 
