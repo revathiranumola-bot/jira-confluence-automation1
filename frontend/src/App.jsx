@@ -1,4 +1,6 @@
-import { NavLink, Route, Routes } from "react-router-dom";
+import { useState } from "react";
+import { NavLink, Route, Routes, useNavigate } from "react-router-dom";
+import { SetupPage, SetupResultPage } from "./pages/SetupPage.jsx";
 
 const navigation = [
   { label: "Roster overview", path: "/", icon: "◫" },
@@ -180,6 +182,14 @@ function NotFoundPage() {
 }
 
 function App() {
+  const [setup, setSetup] = useState(null);
+  const navigate = useNavigate();
+
+  function submitSetup(values) {
+    setSetup(values);
+    navigate("/generation");
+  }
+
   return (
     <div className="app-shell">
       <Sidebar />
@@ -188,8 +198,8 @@ function App() {
         <main className="page-content">
           <Routes>
             <Route element={<OverviewPage />} path="/" />
-            <Route element={<WorkflowPage description="Set the period and approved scheduling inputs before generation." step="01" title="Roster setup" />} path="/setup" />
-            <Route element={<WorkflowPage description="Review the generation outcome and any unresolved constraints." step="02" title="Generation result" />} path="/generation" />
+            <Route element={<SetupPage initialValues={setup} onSubmit={submitSetup} />} path="/setup" />
+            <Route element={<SetupResultPage setup={setup} />} path="/generation" />
             <Route element={<WorkflowPage description="Review date-ordered shifts and edit assignments in a future slice." step="03" title="Review & edit" />} path="/review" />
             <Route element={<WorkflowPage description="Compare hours, nights, and weekend or holiday assignments." step="04" title="Fairness summary" />} path="/fairness" />
             <Route element={<WorkflowPage description="Inspect coverage, eligibility, overlap, and rest findings." step="05" title="Validation details" />} path="/validation" />

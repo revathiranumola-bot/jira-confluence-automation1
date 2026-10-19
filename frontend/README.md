@@ -1,7 +1,13 @@
 # CPS On-Call Roster Frontend
 
-React 18.3.1 and Vite 8.3.4 prototype UI. All workflow screens are local
-presentation shells; no roster records or team identities are fabricated.
+React 18.3.1 and Vite 8.3.4 prototype UI. Roster setup accepts explicit start
+and end dates, a named time zone, and unique local demo member IDs (one per
+line). "Preview setup" validates these inputs and displays a setup summary
+on the generation-result route. "Edit setup" retains the inputs.
+This is an in-memory preview only: reloading clears the inputs and summary.
+It does not generate or persist a roster, verify team eligibility, or check
+scheduling constraints. Other workflow screens remain presentation shells;
+no roster records or team identities are fabricated.
 Publishing is labelled as simulated and does not call ServiceNow.
 
 ## Requirements
