@@ -30,6 +30,16 @@
       "env": {
         "GITHUB_TOKEN": "${input:githubToken}"
       }
+    },
+    "chrome-devtools": {
+      "command": "powershell",
+      "args": [
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-File",
+        "${workspaceFolder}/.vscode/start-chrome-devtools-mcp.ps1"
+      ]
     }
   }
 }
