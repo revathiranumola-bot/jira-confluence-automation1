@@ -28,6 +28,26 @@ No actual roster was generated, saved, validated, or published.
 The results below summarize the checks executed in this session, including
 the Google Chrome retest recorded below.
 
+### Final results at a glance
+
+- **Automated regression:** 14 tests passed, 0 failed in the latest Vitest run.
+- **Route coverage:** All 7 main pages visited and retested in Google Chrome.
+- **Main flow:** Overview -> Configure roster -> required inputs ->
+  Preview setup -> matching Setup summary passed.
+- **Negative cases:** Empty inputs and reversed dates were rejected in Chrome;
+  invalid time zones and duplicate IDs were also covered by automated tests.
+- **State behavior:** Editing retained inputs; reloading cleared the preview.
+- **Confirmed resource defect:** Missing favicon fixed and retested; the
+  declared SVG icon returned HTTP 200.
+- **Final browser diagnostics:** 0 observed console errors, warnings, uncaught
+  exceptions, failed requests, or HTTP errors in the monitored Chrome retest.
+- **Quality gates:** Frontend lint, production build, and whitespace checks passed.
+- **Unresolved observation:** Original-tab navigation timeout was not reproduced
+  in fresh tabs; its cause remains unconfirmed.
+- **Verdict:** PASS for the local-only setup preview. Full roster generation,
+  persistence, review/edit, fairness, scheduling validation, and publishing
+  are not verified. No production-readiness claim is made.
+
 | Test area | Result | Evidence / scope |
 |---|---|---|
 | Frontend automated regression tests | PASS - 14 passed, 0 failed | One Vitest file; application shell, setup validation, submission, editing, and reset behavior |
