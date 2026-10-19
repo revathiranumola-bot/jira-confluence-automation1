@@ -18,6 +18,30 @@ form, fields, or submit action. After the user approved a local-only setup
 prototype, a validated setup form and summary were implemented and retested.
 No actual roster was generated, saved, validated, or published.
 
+## Test result summary
+
+The results below summarize the checks already executed in this session;
+no new test run was performed for this documentation update.
+
+| Test area | Result | Evidence / scope |
+|---|---|---|
+| Frontend automated regression tests | PASS - 14 passed, 0 failed | One Vitest file; application shell, setup validation, submission, editing, and reset behavior |
+| Main page loading | PASS - 7 of 7 routes | All main routes returned HTTP 200 in the pre-fix sweep |
+| Setup-preview browser flow | PASS after fix | Both setup entry links, empty-form rejection, valid submission, matching summary, editing, and clearing on reload |
+| Console monitoring | PASS within observed scope | No warnings, console errors, or uncaught JavaScript exceptions during the seven-page load sweep |
+| Post-fix interaction monitoring | PASS within observed scope | No observed warnings, console errors, exceptions, or HTTP errors during the monitored submission/edit flow |
+| Local service checks | PASS at time checked | Backend running response, frontend HTTP 200, PostgreSQL healthy and accepting connections |
+| Frontend lint | PASS | `npm.cmd run lint` |
+| Frontend production build | PASS | `npm.cmd run build` |
+| Whitespace validation | PASS | `git diff --check` |
+| Original-tab navigation timeout | INCONCLUSIVE | Failed initially; not reproduced in a fresh tab, where both setup links passed |
+| Complete roster lifecycle | BLOCKED / NOT VERIFIED | Actual generation, persistence, assignment editing, fairness, scheduling validation, and publishing are outside the implemented preview |
+
+**Overall outcome:** The approved local-only setup-preview scope passed the
+executed post-fix checks. No confirmed failure remains in that tested scope;
+the original-tab navigation issue remains unexplained. These results do not
+constitute full end-to-end roster validation or production sign-off.
+
 ## Scope and methods
 
 - Visited all seven main routes and inventoried their visible content and controls.
