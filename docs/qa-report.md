@@ -6,8 +6,9 @@
 - **Application:** CPS On-Call Roster local prototype.
 - **Environment:** Windows; frontend at `http://127.0.0.1:5173/`,
   backend at `http://127.0.0.1:3001/`, and PostgreSQL 15 through Docker Compose.
-- **Latest tested application change:** `98289e1` -
-  `fix: form validation error on submit`, committed and pushed to `origin/main`.
+- **Latest tested application change:** Uncommitted favicon fix, retested in
+  Google Chrome at approximately 23:40 (UTC+05:30). The setup-preview
+  implementation is committed as `98289e1`.
 - **Current result:** The approved local-only setup-preview flow passes its
   browser checks and automated regression tests. The complete roster lifecycle
   is not implemented or end-to-end verified.
@@ -20,8 +21,8 @@ No actual roster was generated, saved, validated, or published.
 
 ## Test result summary
 
-The results below summarize the checks already executed in this session;
-no new test run was performed for this documentation update.
+The results below summarize the checks executed in this session, including
+the Google Chrome retest recorded below.
 
 | Test area | Result | Evidence / scope |
 |---|---|---|
@@ -36,6 +37,37 @@ no new test run was performed for this documentation update.
 | Whitespace validation | PASS | `git diff --check` |
 | Original-tab navigation timeout | INCONCLUSIVE | Failed initially; not reproduced in a fresh tab, where both setup links passed |
 | Complete roster lifecycle | BLOCKED / NOT VERIFIED | Actual generation, persistence, assignment editing, fairness, scheduling validation, and publishing are outside the implemented preview |
+
+### Google Chrome follow-up: favicon fix and retest
+
+Later testing in a fresh Google Chrome profile found one additional
+low-severity issue: the browser requested `/favicon.ico`, which returned HTTP
+404 and produced a resource-loading console error. Earlier integrated-browser
+checks had not surfaced it.
+
+Added [favicon.svg](../frontend/public/favicon.svg) and an explicit icon link in
+[index.html](../frontend/index.html). A fresh headless Google Chrome retest
+used the Chrome DevTools Protocol directly, not Chrome DevTools MCP.
+
+| Retest | Result |
+|---|---|
+| All seven main route loads | PASS |
+| Browser-requested `/favicon.svg` | PASS - HTTP 200, `image/svg+xml`; no fallback favicon error observed |
+| Overview -> Configure roster | PASS |
+| Empty submission | PASS - all four required fields rejected |
+| Valid submission and matching summary | PASS - October 20-31, 2026; Asia/Kolkata; demo-alice and demo-bob |
+| Edit setup retains inputs | PASS |
+| Reversed dates | PASS - rejected with field error |
+| Correct invalid date and resubmit | PASS |
+| Reload clears preview | PASS |
+| Console warnings/errors, uncaught exceptions, failed requests, HTTP errors during retest | None observed |
+| Frontend Vitest regression tests rerun | PASS - 14 passed |
+| Frontend lint and production build rerun | PASS |
+| Production favicon asset and HTML declaration | PASS |
+
+Post-fix screenshot: `chrome-retest-result.png` in the session artifact
+directory documented below. This is a local setup-preview test; it does not
+verify roster generation, persistent storage, or publishing.
 
 **Overall outcome:** The approved local-only setup-preview scope passed the
 executed post-fix checks. No confirmed failure remains in that tested scope;
